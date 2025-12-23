@@ -1,0 +1,2788 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable,skins}
+\usepackage{mathtools}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\geometry{margin=1in}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Linear Systems in ML \& DL}
+\lhead{Detailed Notes}
+\cfoot{\thepage}
+
+\title{\textbf{Solving Systems of Linear Equations, \\Linear Transformations, and Matrix Composition \\ for Machine Learning and Deep Learning}}
+\author{Comprehensive Mathematical Foundation}
+\date{\today}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{property}{Property}[section]
+
+\definecolor{highlight}{RGB}{255,255,200}
+\definecolor{examplecolor}{RGB}{230,240,255}
+\definecolor{defcolor}{RGB}{255,240,245}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Solving Systems of Linear Equations}
+
+\subsection{Introduction and Motivation}
+
+\begin{tcolorbox}[enhanced,breakable,colback=defcolor,colframe=red!75!black,title=Why Study Systems of Linear Equations in ML/DL?]
+Many machine learning algorithms, including linear regression, logistic regression, and neural network training, essentially reduce to solving systems of linear equations. In deep learning, backpropagation can be viewed as a process of solving systems of equations to find optimal parameters.
+\end{tcolorbox}
+
+\subsection{Fundamental Concepts}
+
+\begin{definition}[System of Linear Equations]
+A system of $m$ linear equations in $n$ unknowns is a collection of equations of the form:
+\begin{align*}
+a_{11}x_1 + a_{12}x_2 + \cdots + a_{1n}x_n &= b_1 \\
+a_{21}x_1 + a_{22}x_2 + \cdots + a_{2n}x_n &= b_2 \\
+&\vdots \\
+a_{m1}x_1 + a_{m2}x_2 + \cdots + a_{mn}x_n &= b_m
+\end{align*}
+where $a_{ij}$ are coefficients, $x_j$ are unknowns, and $b_i$ are constants.
+\end{definition}
+
+\begin{definition}[Matrix Form]
+The system can be written compactly as:
+\[
+\mathbf{Ax} = \mathbf{b}
+\]
+where:
+\begin{itemize}
+\item $\mathbf{A} \in \mathbb{R}^{m \times n}$ is the coefficient matrix
+\item $\mathbf{x} \in \mathbb{R}^{n}$ is the vector of unknowns
+\item $\mathbf{b} \in \mathbb{R}^{m}$ is the constant vector
+\end{itemize}
+\end{definition}
+
+\subsection{Types of Solutions}
+
+A system of linear equations can have:
+\begin{enumerate}
+\item \textbf{Unique Solution}: Exactly one solution exists
+\item \textbf{Infinite Solutions}: Infinitely many solutions exist
+\item \textbf{No Solution}: The system is inconsistent
+\end{enumerate}
+
+\begin{theorem}[Existence and Uniqueness]
+For a system $\mathbf{Ax} = \mathbf{b}$:
+\begin{itemize}
+\item The system has at least one solution if and only if $\text{rank}(\mathbf{A}) = \text{rank}([\mathbf{A}|\mathbf{b}])$
+\item The solution is unique if and only if $\text{rank}(\mathbf{A}) = n$ (number of unknowns)
+\end{itemize}
+\end{theorem}
+
+\subsection{Methods for Solving Linear Systems}
+
+\subsubsection{Direct Methods}
+
+\paragraph{Gaussian Elimination}
+
+\begin{tcolorbox}[enhanced,breakable,colback=examplecolor,colframe=blue!75!black,title=Algorithm: Gaussian Elimination]
+\textbf{Forward Elimination}:
+\begin{enumerate}
+\item Form the augmented matrix $[\mathbf{A}|\mathbf{b}]$
+\item For each column $k$ from 1 to $n$:
+    \begin{itemize}
+    \item Choose a pivot element (usually $a_{kk}$)
+    \item Eliminate all elements below the pivot
+    \end{itemize}
+\item Result: Upper triangular form
+\end{enumerate}
+
+\textbf{Back Substitution}:
+\begin{enumerate}
+\item Start from the last equation
+\item Solve for $x_n$, then $x_{n-1}$, etc.
+\end{enumerate}
+\end{tcolorbox}
+
+\begin{example}[Gaussian Elimination - Simple Case]
+Solve the system:
+\begin{align*}
+2x_1 + x_2 - x_3 &= 8 \\
+-3x_1 - x_2 + 2x_3 &= -11 \\
+-2x_1 + x_2 + 2x_3 &= -3
+\end{align*}
+
+\textbf{Step 1: Form Augmented Matrix}
+\[
+\left[\begin{array}{ccc|c}
+2 & 1 & -1 & 8 \\
+-3 & -1 & 2 & -11 \\
+-2 & 1 & 2 & -3
+\end{array}\right]
+\]
+
+\textbf{Step 2: Forward Elimination}
+
+Eliminate $x_1$ from rows 2 and 3:
+\begin{itemize}
+\item $R_2 \leftarrow R_2 + \frac{3}{2}R_1$:
+\[
+R_2 = [-3, -1, 2, -11] + \frac{3}{2}[2, 1, -1, 8] = [0, 0.5, 0.5, 1]
+\]
+
+\item $R_3 \leftarrow R_3 + R_1$:
+\[
+R_3 = [-2, 1, 2, -3] + [2, 1, -1, 8] = [0, 2, 1, 5]
+\]
+\end{itemize}
+
+Matrix becomes:
+\[
+\left[\begin{array}{ccc|c}
+2 & 1 & -1 & 8 \\
+0 & 0.5 & 0.5 & 1 \\
+0 & 2 & 1 & 5
+\end{array}\right]
+\]
+
+Eliminate $x_2$ from row 3:
+\begin{itemize}
+\item $R_3 \leftarrow R_3 - 4R_2$:
+\[
+R_3 = [0, 2, 1, 5] - 4[0, 0.5, 0.5, 1] = [0, 0, -1, 1]
+\]
+\end{itemize}
+
+Upper triangular form:
+\[
+\left[\begin{array}{ccc|c}
+2 & 1 & -1 & 8 \\
+0 & 0.5 & 0.5 & 1 \\
+0 & 0 & -1 & 1
+\end{array}\right]
+\]
+
+\textbf{Step 3: Back Substitution}
+
+From row 3: $-x_3 = 1 \Rightarrow x_3 = -1$
+
+From row 2: $0.5x_2 + 0.5(-1) = 1 \Rightarrow x_2 = 3$
+
+From row 1: $2x_1 + 3 - (-1) = 8 \Rightarrow x_1 = 2$
+
+\textbf{Solution}: $\mathbf{x} = [2, 3, -1]^T$
+
+\textbf{Verification}:
+\begin{align*}
+2(2) + 3 - (-1) &= 4 + 3 + 1 = 8 \checkmark \\
+-3(2) - 3 + 2(-1) &= -6 - 3 - 2 = -11 \checkmark \\
+-2(2) + 3 + 2(-1) &= -4 + 3 - 2 = -3 \checkmark
+\end{align*}
+\end{example}
+
+\paragraph{LU Decomposition}
+
+\begin{definition}[LU Decomposition]
+For a matrix $\mathbf{A}$, LU decomposition expresses it as:
+\[
+\mathbf{A} = \mathbf{LU}
+\]
+where:
+\begin{itemize}
+\item $\mathbf{L}$ is a lower triangular matrix with 1's on the diagonal
+\item $\mathbf{U}$ is an upper triangular matrix
+\end{itemize}
+\end{definition}
+
+\textbf{Solving $\mathbf{Ax} = \mathbf{b}$ using LU Decomposition}:
+\begin{enumerate}
+\item Decompose: $\mathbf{A} = \mathbf{LU}$
+\item Solve $\mathbf{Ly} = \mathbf{b}$ for $\mathbf{y}$ (forward substitution)
+\item Solve $\mathbf{Ux} = \mathbf{y}$ for $\mathbf{x}$ (backward substitution)
+\end{enumerate}
+
+\begin{example}[LU Decomposition]
+Decompose and solve:
+\[
+\mathbf{A} = \begin{bmatrix}
+2 & 1 & 1 \\
+4 & 3 & 3 \\
+8 & 7 & 9
+\end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix}
+2 \\
+8 \\
+34
+\end{bmatrix}
+\]
+
+\textbf{Step 1: Find L and U}
+
+Using Gaussian elimination with record of multipliers:
+
+First column:
+\begin{itemize}
+\item $l_{21} = \frac{4}{2} = 2$
+\item $l_{31} = \frac{8}{2} = 4$
+\end{itemize}
+
+After first elimination:
+\[
+\begin{bmatrix}
+2 & 1 & 1 \\
+0 & 1 & 1 \\
+0 & 3 & 5
+\end{bmatrix}
+\]
+
+Second column:
+\begin{itemize}
+\item $l_{32} = \frac{3}{1} = 3$
+\end{itemize}
+
+Final upper triangular:
+\[
+\mathbf{U} = \begin{bmatrix}
+2 & 1 & 1 \\
+0 & 1 & 1 \\
+0 & 0 & 2
+\end{bmatrix}
+\]
+
+Lower triangular with multipliers:
+\[
+\mathbf{L} = \begin{bmatrix}
+1 & 0 & 0 \\
+2 & 1 & 0 \\
+4 & 3 & 1
+\end{bmatrix}
+\]
+
+\textbf{Verification}:
+\[
+\mathbf{LU} = \begin{bmatrix}
+1 & 0 & 0 \\
+2 & 1 & 0 \\
+4 & 3 & 1
+\end{bmatrix}
+\begin{bmatrix}
+2 & 1 & 1 \\
+0 & 1 & 1 \\
+0 & 0 & 2
+\end{bmatrix}
+= \begin{bmatrix}
+2 & 1 & 1 \\
+4 & 3 & 3 \\
+8 & 7 & 9
+\end{bmatrix} = \mathbf{A} \checkmark
+\]
+
+\textbf{Step 2: Solve $\mathbf{Ly} = \mathbf{b}$}
+\[
+\begin{bmatrix}
+1 & 0 & 0 \\
+2 & 1 & 0 \\
+4 & 3 & 1
+\end{bmatrix}
+\begin{bmatrix}
+y_1 \\ y_2 \\ y_3
+\end{bmatrix}
+= \begin{bmatrix}
+2 \\ 8 \\ 34
+\end{bmatrix}
+\]
+
+Forward substitution:
+\begin{align*}
+y_1 &= 2 \\
+2y_1 + y_2 &= 8 \Rightarrow y_2 = 8 - 4 = 4 \\
+4y_1 + 3y_2 + y_3 &= 34 \Rightarrow y_3 = 34 - 8 - 12 = 14
+\end{align*}
+
+So $\mathbf{y} = [2, 4, 14]^T$
+
+\textbf{Step 3: Solve $\mathbf{Ux} = \mathbf{y}$}
+\[
+\begin{bmatrix}
+2 & 1 & 1 \\
+0 & 1 & 1 \\
+0 & 0 & 2
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2 \\ x_3
+\end{bmatrix}
+= \begin{bmatrix}
+2 \\ 4 \\ 14
+\end{bmatrix}
+\]
+
+Backward substitution:
+\begin{align*}
+2x_3 &= 14 \Rightarrow x_3 = 7 \\
+x_2 + x_3 &= 4 \Rightarrow x_2 = 4 - 7 = -3 \\
+2x_1 + x_2 + x_3 &= 2 \Rightarrow 2x_1 = 2 + 3 - 7 = -2 \Rightarrow x_1 = -1
+\end{align*}
+
+\textbf{Solution}: $\mathbf{x} = [-1, -3, 7]^T$
+\end{example}
+
+\subsubsection{Inverse Matrix Method}
+
+\begin{definition}[Solution via Matrix Inverse]
+If $\mathbf{A}$ is square and invertible, the solution is:
+\[
+\mathbf{x} = \mathbf{A}^{-1}\mathbf{b}
+\]
+\end{definition}
+
+\begin{property}[When to Use Inverse Method]
+\begin{itemize}
+\item[\checkmark] Good when solving multiple systems with same $\mathbf{A}$ but different $\mathbf{b}$
+\item[$\times$] Computationally expensive: $O(n^3)$ for inversion
+\item[$\times$] Numerically unstable for large or ill-conditioned matrices
+\item[\checkmark] Used in theoretical derivations
+\end{itemize}
+\end{property}
+
+\begin{example}[Matrix Inverse Method - 2×2 System]
+Solve:
+\[
+\begin{bmatrix}
+3 & 2 \\
+1 & 4
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2
+\end{bmatrix}
+= \begin{bmatrix}
+11 \\ 13
+\end{bmatrix}
+\]
+
+\textbf{Step 1: Find $\mathbf{A}^{-1}$}
+
+For a 2×2 matrix:
+\[
+\mathbf{A}^{-1} = \frac{1}{\det(\mathbf{A})} \begin{bmatrix}
+a_{22} & -a_{12} \\
+-a_{21} & a_{11}
+\end{bmatrix}
+\]
+
+Calculate determinant:
+\[
+\det(\mathbf{A}) = 3 \cdot 4 - 2 \cdot 1 = 12 - 2 = 10
+\]
+
+Therefore:
+\[
+\mathbf{A}^{-1} = \frac{1}{10} \begin{bmatrix}
+4 & -2 \\
+-1 & 3
+\end{bmatrix}
+= \begin{bmatrix}
+0.4 & -0.2 \\
+-0.1 & 0.3
+\end{bmatrix}
+\]
+
+\textbf{Step 2: Compute $\mathbf{x} = \mathbf{A}^{-1}\mathbf{b}$}
+\[
+\mathbf{x} = \begin{bmatrix}
+0.4 & -0.2 \\
+-0.1 & 0.3
+\end{bmatrix}
+\begin{bmatrix}
+11 \\ 13
+\end{bmatrix}
+= \begin{bmatrix}
+0.4(11) + (-0.2)(13) \\
+-0.1(11) + 0.3(13)
+\end{bmatrix}
+= \begin{bmatrix}
+4.4 - 2.6 \\
+-1.1 + 3.9
+\end{bmatrix}
+= \begin{bmatrix}
+1.8 \\ 2.8
+\end{bmatrix}
+\]
+
+\textbf{Solution}: $x_1 = 1.8$, $x_2 = 2.8$
+
+\textbf{Verification}:
+\begin{align*}
+3(1.8) + 2(2.8) &= 5.4 + 5.6 = 11 \checkmark \\
+1(1.8) + 4(2.8) &= 1.8 + 11.2 = 13 \checkmark
+\end{align*}
+\end{example}
+
+\subsection{Machine Learning Application: Linear Regression}
+
+\begin{tcolorbox}[enhanced,breakable,colback=yellow!10!white,colframe=orange!75!black,title=ML Application: Ordinary Least Squares]
+Linear regression finds the best-fit line by solving a system of linear equations.
+\end{tcolorbox}
+
+\begin{example}[Linear Regression - Complete Derivation and Solution]
+Given data points: $(x_1, y_1), (x_2, y_2), \ldots, (x_m, y_m)$
+
+Find parameters $\theta_0$ (intercept) and $\theta_1$ (slope) for:
+\[
+\hat{y} = \theta_0 + \theta_1 x
+\]
+
+\textbf{Problem Formulation}:
+
+Minimize sum of squared errors:
+\[
+J(\theta_0, \theta_1) = \sum_{i=1}^{m} (y_i - \theta_0 - \theta_1 x_i)^2
+\]
+
+\textbf{Step 1: Derive Normal Equations}
+
+Take partial derivatives and set to zero:
+\[
+\frac{\partial J}{\partial \theta_0} = -2\sum_{i=1}^{m} (y_i - \theta_0 - \theta_1 x_i) = 0
+\]
+\[
+\frac{\partial J}{\partial \theta_1} = -2\sum_{i=1}^{m} x_i(y_i - \theta_0 - \theta_1 x_i) = 0
+\]
+
+Simplifying:
+\begin{align}
+m\theta_0 + \theta_1\sum_{i=1}^{m} x_i &= \sum_{i=1}^{m} y_i \\
+\theta_0\sum_{i=1}^{m} x_i + \theta_1\sum_{i=1}^{m} x_i^2 &= \sum_{i=1}^{m} x_i y_i
+\end{align}
+
+This is a system of 2 linear equations in 2 unknowns!
+
+\textbf{Matrix Form}:
+\[
+\begin{bmatrix}
+m & \sum x_i \\
+\sum x_i & \sum x_i^2
+\end{bmatrix}
+\begin{bmatrix}
+\theta_0 \\ \theta_1
+\end{bmatrix}
+= \begin{bmatrix}
+\sum y_i \\
+\sum x_i y_i
+\end{bmatrix}
+\]
+
+\textbf{Step 2: Numerical Example}
+
+Dataset:
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+$x$ & $y$ \\
+\hline
+1 & 2 \\
+2 & 4 \\
+3 & 5 \\
+4 & 4 \\
+5 & 5 \\
+\hline
+\end{tabular}
+\end{center}
+
+Calculate summations:
+\begin{align*}
+m &= 5 \\
+\sum x_i &= 1 + 2 + 3 + 4 + 5 = 15 \\
+\sum y_i &= 2 + 4 + 5 + 4 + 5 = 20 \\
+\sum x_i^2 &= 1 + 4 + 9 + 16 + 25 = 55 \\
+\sum x_i y_i &= 2 + 8 + 15 + 16 + 25 = 66
+\end{align*}
+
+System becomes:
+\[
+\begin{bmatrix}
+5 & 15 \\
+15 & 55
+\end{bmatrix}
+\begin{bmatrix}
+\theta_0 \\ \theta_1
+\end{bmatrix}
+= \begin{bmatrix}
+20 \\ 66
+\end{bmatrix}
+\]
+
+\textbf{Step 3: Solve Using Gaussian Elimination}
+
+Augmented matrix:
+\[
+\left[\begin{array}{cc|c}
+5 & 15 & 20 \\
+15 & 55 & 66
+\end{array}\right]
+\]
+
+$R_2 \leftarrow R_2 - 3R_1$:
+\[
+R_2 = [15, 55, 66] - 3[5, 15, 20] = [0, 10, 6]
+\]
+
+\[
+\left[\begin{array}{cc|c}
+5 & 15 & 20 \\
+0 & 10 & 6
+\end{array}\right]
+\]
+
+Back substitution:
+\begin{align*}
+10\theta_1 &= 6 \Rightarrow \theta_1 = 0.6 \\
+5\theta_0 + 15(0.6) &= 20 \Rightarrow \theta_0 = \frac{20 - 9}{5} = 2.2
+\end{align*}
+
+\textbf{Solution}: $\hat{y} = 2.2 + 0.6x$
+
+\textbf{Step 4: Predictions}
+
+For each data point:
+\begin{align*}
+x = 1: \hat{y} &= 2.2 + 0.6(1) = 2.8 \\
+x = 2: \hat{y} &= 2.2 + 0.6(2) = 3.4 \\
+x = 3: \hat{y} &= 2.2 + 0.6(3) = 4.0 \\
+x = 4: \hat{y} &= 2.2 + 0.6(4) = 4.6 \\
+x = 5: \hat{y} &= 2.2 + 0.6(5) = 5.2
+\end{align*}
+
+\textbf{Step 5: Calculate Error}
+
+Mean Squared Error:
+\[
+MSE = \frac{1}{5}\sum_{i=1}^{5}(y_i - \hat{y}_i)^2 = \frac{1}{5}[(2-2.8)^2 + (4-3.4)^2 + (5-4.0)^2 + (4-4.6)^2 + (5-5.2)^2]
+\]
+\[
+= \frac{1}{5}[0.64 + 0.36 + 1.00 + 0.36 + 0.04] = \frac{2.4}{5} = 0.48
+\]
+\end{example}
+
+\subsection{Deep Learning Application: Finding Optimal Weights}
+
+\begin{example}[Neural Network Weight Update via Linear System]
+Consider a simple neural network with one hidden layer. During backpropagation, we need to find weight updates.
+
+\textbf{Problem Setup}:
+\begin{itemize}
+\item Input: $\mathbf{x} = [1, 2]^T$
+\item Target output: $\mathbf{y} = [3, 4]^T$
+\item Current weights: $\mathbf{W}$
+\item Learning rate: $\alpha = 0.1$
+\end{itemize}
+
+\textbf{Forward Pass}:
+\[
+\mathbf{z} = \mathbf{Wx}, \quad \hat{\mathbf{y}} = \mathbf{z}
+\]
+
+\textbf{Loss}:
+\[
+L = \frac{1}{2}\|\mathbf{y} - \hat{\mathbf{y}}\|^2
+\]
+
+\textbf{Gradient}:
+\[
+\frac{\partial L}{\partial \mathbf{W}} = -(\mathbf{y} - \hat{\mathbf{y}})\mathbf{x}^T
+\]
+
+\textbf{Weight Update (Linear System)}:
+\[
+\mathbf{W}^{new} = \mathbf{W}^{old} + \alpha \cdot (\mathbf{y} - \hat{\mathbf{y}})\mathbf{x}^T
+\]
+
+This can be formulated as solving:
+\[
+\mathbf{W}^{new}\mathbf{x} \approx \mathbf{y}
+\]
+
+\textbf{Numerical Computation}:
+
+Suppose $\mathbf{W}^{old} = \begin{bmatrix} 0.5 & 0.3 \\ 0.7 & 0.9 \end{bmatrix}$
+
+Forward pass:
+\[
+\hat{\mathbf{y}} = \begin{bmatrix} 0.5 & 0.3 \\ 0.7 & 0.9 \end{bmatrix} \begin{bmatrix} 1 \\ 2 \end{bmatrix} = \begin{bmatrix} 1.1 \\ 2.5 \end{bmatrix}
+\]
+
+Error:
+\[
+\mathbf{y} - \hat{\mathbf{y}} = \begin{bmatrix} 3 \\ 4 \end{bmatrix} - \begin{bmatrix} 1.1 \\ 2.5 \end{bmatrix} = \begin{bmatrix} 1.9 \\ 1.5 \end{bmatrix}
+\]
+
+Gradient:
+\[
+\frac{\partial L}{\partial \mathbf{W}} = -\begin{bmatrix} 1.9 \\ 1.5 \end{bmatrix} \begin{bmatrix} 1 & 2 \end{bmatrix} = -\begin{bmatrix} 1.9 & 3.8 \\ 1.5 & 3.0 \end{bmatrix}
+\]
+
+Weight update:
+\[
+\mathbf{W}^{new} = \begin{bmatrix} 0.5 & 0.3 \\ 0.7 & 0.9 \end{bmatrix} + 0.1 \begin{bmatrix} 1.9 & 3.8 \\ 1.5 & 3.0 \end{bmatrix} = \begin{bmatrix} 0.69 & 0.68 \\ 0.85 & 1.20 \end{bmatrix}
+\]
+\end{example}
+
+\subsection{Computational Complexity Analysis}
+
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Method} & \textbf{Time Complexity} & \textbf{Space Complexity} \\
+\hline
+Gaussian Elimination & $O(n^3)$ & $O(n^2)$ \\
+LU Decomposition & $O(n^3)$ & $O(n^2)$ \\
+Matrix Inverse & $O(n^3)$ & $O(n^2)$ \\
+Back Substitution & $O(n^2)$ & $O(n)$ \\
+Forward Substitution & $O(n^2)$ & $O(n)$ \\
+\hline
+\end{tabular}
+\end{center}
+
+\newpage
+
+\section{Linear Transformations}
+
+\subsection{Introduction and Motivation}
+
+\begin{tcolorbox}[enhanced,breakable,colback=defcolor,colframe=red!75!black,title=Why Linear Transformations in ML/DL?]
+Linear transformations map input data to different spaces while preserving relationships between points. This is fundamental in machine learning and deep learning algorithms, from simple regression to complex neural networks. Each layer in a neural network performs a linear transformation followed by a non-linear activation.
+\end{tcolorbox}
+
+\subsection{Fundamental Definitions}
+
+\begin{definition}[Linear Transformation]
+A function $T: \mathbb{R}^n \rightarrow \mathbb{R}^m$ is called a linear transformation if for all vectors $\mathbf{u}, \mathbf{v} \in \mathbb{R}^n$ and all scalars $c \in \mathbb{R}$:
+\begin{enumerate}
+\item $T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})$ \quad (Additivity)
+\item $T(c\mathbf{u}) = cT(\mathbf{u})$ \quad (Homogeneity)
+\end{enumerate}
+
+Equivalently: $T(c_1\mathbf{u} + c_2\mathbf{v}) = c_1T(\mathbf{u}) + c_2T(\mathbf{v})$ (Linearity)
+\end{definition}
+
+\begin{theorem}[Matrix Representation]
+Every linear transformation $T: \mathbb{R}^n \rightarrow \mathbb{R}^m$ can be represented by a unique matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ such that:
+\[
+T(\mathbf{x}) = \mathbf{Ax}
+\]
+The columns of $\mathbf{A}$ are $T(\mathbf{e}_1), T(\mathbf{e}_2), \ldots, T(\mathbf{e}_n)$ where $\mathbf{e}_i$ are standard basis vectors.
+\end{theorem}
+
+\subsection{Properties of Linear Transformations}
+
+\begin{property}[Important Properties]
+\begin{enumerate}
+\item $T(\mathbf{0}) = \mathbf{0}$ (Zero vector maps to zero vector)
+\item $T(-\mathbf{v}) = -T(\mathbf{v})$ (Preserves negation)
+\item $T(\mathbf{v} - \mathbf{w}) = T(\mathbf{v}) - T(\mathbf{w})$ (Preserves differences)
+\item Lines map to lines (or points)
+\item Parallel lines map to parallel lines (or points)
+\item Origin is always fixed
+\end{enumerate}
+\end{property}
+
+\subsection{Types of Linear Transformations in 2D and 3D}
+
+\subsubsection{Scaling}
+
+\begin{definition}[Scaling Transformation]
+Stretches or compresses along coordinate axes:
+\[
+\mathbf{A}_{scale} = \begin{bmatrix}
+s_x & 0 \\
+0 & s_y
+\end{bmatrix}
+\]
+where $s_x, s_y$ are scaling factors.
+\end{definition}
+
+\begin{example}[Scaling in 2D]
+Scale a point by factor 2 in x-direction and 3 in y-direction:
+\[
+\mathbf{A} = \begin{bmatrix}
+2 & 0 \\
+0 & 3
+\end{bmatrix}
+\]
+
+Transform point $\mathbf{v} = [1, 2]^T$:
+\[
+T(\mathbf{v}) = \begin{bmatrix}
+2 & 0 \\
+0 & 3
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 2
+\end{bmatrix}
+= \begin{bmatrix}
+2 \\ 6
+\end{bmatrix}
+\]
+
+\textbf{ML Application - Feature Scaling}:
+
+In machine learning, feature scaling standardizes features:
+\[
+\mathbf{x}_{scaled} = \text{diag}(\mathbf{s}) \cdot \mathbf{x}
+\]
+
+Example dataset with 3 features:
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+Age & Income & Score \\
+\hline
+25 & 50000 & 85 \\
+35 & 75000 & 92 \\
+45 & 100000 & 78 \\
+\hline
+\end{tabular}
+\end{center}
+
+Scaling factors to normalize to [0,1]:
+\begin{align*}
+s_1 &= \frac{1}{45 - 25} = 0.05 \\
+s_2 &= \frac{1}{100000 - 50000} = 0.00002 \\
+s_3 &= \frac{1}{92 - 78} = 0.071
+\end{align*}
+
+For point [35, 75000, 92]:
+\[
+\begin{bmatrix}
+0.05 & 0 & 0 \\
+0 & 0.00002 & 0 \\
+0 & 0 & 0.071
+\end{bmatrix}
+\begin{bmatrix}
+35 - 25 \\ 75000 - 50000 \\ 92 - 78
+\end{bmatrix}
+= \begin{bmatrix}
+0.5 \\ 0.5 \\ 0.99
+\end{bmatrix}
+\]
+\end{example}
+
+\subsubsection{Rotation}
+
+\begin{definition}[Rotation Transformation in 2D]
+Rotates vectors by angle $\theta$ counterclockwise:
+\[
+\mathbf{R}(\theta) = \begin{bmatrix}
+\cos\theta & -\sin\theta \\
+\sin\theta & \cos\theta
+\end{bmatrix}
+\]
+\end{definition}
+
+\begin{example}[Rotation by 90 degrees]
+Rotate point $[3, 1]^T$ by 90° counterclockwise:
+
+\textbf{Step 1}: $\theta = 90° = \frac{\pi}{2}$ radians
+
+\textbf{Step 2}: Construct rotation matrix:
+\[
+\mathbf{R}(90°) = \begin{bmatrix}
+\cos(90°) & -\sin(90°) \\
+\sin(90°) & \cos(90°)
+\end{bmatrix}
+= \begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix}
+\]
+
+\textbf{Step 3}: Apply transformation:
+\[
+\mathbf{v}' = \begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+3 \\ 1
+\end{bmatrix}
+= \begin{bmatrix}
+0(3) + (-1)(1) \\
+1(3) + 0(1)
+\end{bmatrix}
+= \begin{bmatrix}
+-1 \\ 3
+\end{bmatrix}
+\]
+
+\textbf{Verification}: Original point $(3, 1)$ is at distance $\sqrt{10}$ from origin. After rotation: $\sqrt{(-1)^2 + 3^2} = \sqrt{10}$ ✓
+
+\textbf{ML Application - Data Augmentation}:
+
+In computer vision, rotating images for data augmentation:
+\[
+\begin{bmatrix}
+\cos(30°) & -\sin(30°) \\
+\sin(30°) & \cos(30°)
+\end{bmatrix}
+\begin{bmatrix}
+x \\ y
+\end{bmatrix}_{\text{pixel}}
+= \begin{bmatrix}
+0.866x - 0.5y \\
+0.5x + 0.866y
+\end{bmatrix}
+\]
+\end{example}
+
+\subsubsection{Reflection}
+
+\begin{definition}[Reflection Transformations]
+Reflection across x-axis: $\mathbf{R}_x = \begin{bmatrix} 1 & 0 \\ 0 & -1 \end{bmatrix}$
+
+Reflection across y-axis: $\mathbf{R}_y = \begin{bmatrix} -1 & 0 \\ 0 & 1 \end{bmatrix}$
+
+Reflection across $y=x$: $\mathbf{R}_{y=x} = \begin{bmatrix} 0 & 1 \\ 1 & 0 \end{bmatrix}$
+\end{definition}
+
+\subsubsection{Shear}
+
+\begin{definition}[Shear Transformation]
+Horizontal shear: $\mathbf{S}_x = \begin{bmatrix} 1 & k \\ 0 & 1 \end{bmatrix}$
+
+Vertical shear: $\mathbf{S}_y = \begin{bmatrix} 1 & 0 \\ k & 1 \end{bmatrix}$
+
+where $k$ is the shear factor.
+\end{definition}
+
+\begin{example}[Shear Transformation]
+Apply horizontal shear with $k=2$ to point $[1, 2]^T$:
+\[
+\begin{bmatrix}
+1 & 2 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 2
+\end{bmatrix}
+= \begin{bmatrix}
+1 + 2(2) \\
+2
+\end{bmatrix}
+= \begin{bmatrix}
+5 \\ 2
+\end{bmatrix}
+\]
+
+The x-coordinate shifts by $2 \times y = 4$ units.
+\end{example}
+
+\subsection{Projection}
+
+\begin{definition}[Orthogonal Projection]
+Projection onto a line in direction $\mathbf{u}$ (unit vector):
+\[
+\text{proj}_{\mathbf{u}}(\mathbf{v}) = (\mathbf{v} \cdot \mathbf{u})\mathbf{u} = (\mathbf{u}\mathbf{u}^T)\mathbf{v}
+\]
+
+Matrix form: $\mathbf{P} = \mathbf{u}\mathbf{u}^T$
+\end{definition}
+
+\begin{example}[Projection onto a Line]
+Project $\mathbf{v} = [3, 4]^T$ onto the line $y = x$ (i.e., direction $\mathbf{u} = \frac{1}{\sqrt{2}}[1, 1]^T$):
+
+\textbf{Step 1}: Verify $\mathbf{u}$ is unit vector:
+\[
+\|\mathbf{u}\| = \sqrt{\left(\frac{1}{\sqrt{2}}\right)^2 + \left(\frac{1}{\sqrt{2}}\right)^2} = \sqrt{\frac{1}{2} + \frac{1}{2}} = 1 \checkmark
+\]
+
+\textbf{Step 2}: Construct projection matrix:
+\[
+\mathbf{P} = \mathbf{u}\mathbf{u}^T = \frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 1 \end{bmatrix} \cdot \frac{1}{\sqrt{2}}\begin{bmatrix} 1 & 1 \end{bmatrix} = \frac{1}{2}\begin{bmatrix} 1 & 1 \\ 1 & 1 \end{bmatrix}
+\]
+
+\textbf{Step 3}: Apply projection:
+\[
+\mathbf{P}\mathbf{v} = \frac{1}{2}\begin{bmatrix} 1 & 1 \\ 1 & 1 \end{bmatrix} \begin{bmatrix} 3 \\ 4 \end{bmatrix} = \frac{1}{2}\begin{bmatrix} 7 \\ 7 \end{bmatrix} = \begin{bmatrix} 3.5 \\ 3.5 \end{bmatrix}
+\]
+
+\textbf{Interpretation}: Point $(3, 4)$ projects to $(3.5, 3.5)$ on line $y=x$.
+
+\textbf{ML Application - PCA}:
+
+Principal Component Analysis uses projections:
+\[
+\mathbf{x}_{projected} = \mathbf{P}_k\mathbf{x} = \mathbf{U}_k\mathbf{U}_k^T\mathbf{x}
+\]
+where $\mathbf{U}_k$ contains top $k$ principal components.
+\end{example}
+
+\subsection{Kernel and Image}
+
+\begin{definition}[Kernel (Null Space)]
+The kernel of a linear transformation $T$ is:
+\[
+\ker(T) = \{\mathbf{v} \in \mathbb{R}^n : T(\mathbf{v}) = \mathbf{0}\}
+\]
+All vectors that map to the zero vector.
+\end{definition}
+
+\begin{definition}[Image (Range)]
+The image of $T$ is:
+\[
+\text{Im}(T) = \{T(\mathbf{v}) : \mathbf{v} \in \mathbb{R}^n\}
+\]
+All possible outputs of the transformation.
+\end{definition}
+
+\begin{example}[Finding Kernel and Image]
+Consider transformation $T: \mathbb{R}^3 \rightarrow \mathbb{R}^2$ with matrix:
+\[
+\mathbf{A} = \begin{bmatrix}
+1 & 2 & 3 \\
+2 & 4 & 6
+\end{bmatrix}
+\]
+
+\textbf{Find Kernel}:
+
+Solve $\mathbf{Ax} = \mathbf{0}$:
+\[
+\begin{bmatrix}
+1 & 2 & 3 \\
+2 & 4 & 6
+\end{bmatrix}
+\begin{bmatrix}
+x_1 \\ x_2 \\ x_3
+\end{bmatrix}
+= \begin{bmatrix}
+0 \\ 0
+\end{bmatrix}
+\]
+
+Row reduce:
+\[
+\left[\begin{array}{ccc|c}
+1 & 2 & 3 & 0 \\
+2 & 4 & 6 & 0
+\end{array}\right]
+\rightarrow
+\left[\begin{array}{ccc|c}
+1 & 2 & 3 & 0 \\
+0 & 0 & 0 & 0
+\end{array}\right]
+\]
+
+From $x_1 + 2x_2 + 3x_3 = 0$, we get $x_1 = -2x_2 - 3x_3$
+
+Kernel:
+\[
+\ker(T) = \text{span}\left\{\begin{bmatrix} -2 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} -3 \\ 0 \\ 1 \end{bmatrix}\right\}
+\]
+
+\textbf{Find Image}:
+
+Image is spanned by linearly independent columns. Since column 2 = 2×column 1 and column 3 = 3×column 1:
+\[
+\text{Im}(T) = \text{span}\left\{\begin{bmatrix} 1 \\ 2 \end{bmatrix}\right\}
+\]
+
+Dimension: $\dim(\ker(T)) = 2$, $\dim(\text{Im}(T)) = 1$
+
+Verify rank-nullity: $2 + 1 = 3 = n$ ✓
+\end{example}
+
+\subsection{Machine Learning Applications}
+
+\begin{example}[Feature Transformation in ML]
+\textbf{Problem}: Transform 2D data for better linear separability.
+
+Original features: $\mathbf{x} = [x_1, x_2]^T$
+
+Dataset:
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+$x_1$ & $x_2$ & Class \\
+\hline
+1 & 1 & A \\
+2 & 1 & A \\
+1 & 2 & B \\
+2 & 2 & B \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Apply Linear Transformation}:
+\[
+\mathbf{W} = \begin{bmatrix}
+1 & 1 \\
+1 & -1
+\end{bmatrix}
+\]
+
+This creates features: $z_1 = x_1 + x_2$ and $z_2 = x_1 - x_2$
+
+\textbf{Transformed Dataset}:
+\begin{align*}
+\mathbf{z}_1 &= \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix} \begin{bmatrix} 1 \\ 1 \end{bmatrix} = \begin{bmatrix} 2 \\ 0 \end{bmatrix} \quad \text{(Class A)} \\
+\mathbf{z}_2 &= \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix} \begin{bmatrix} 2 \\ 1 \end{bmatrix} = \begin{bmatrix} 3 \\ 1 \end{bmatrix} \quad \text{(Class A)} \\
+\mathbf{z}_3 &= \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix} \begin{bmatrix} 1 \\ 2 \end{bmatrix} = \begin{bmatrix} 3 \\ -1 \end{bmatrix} \quad \text{(Class B)} \\
+\mathbf{z}_4 &= \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix} \begin{bmatrix} 2 \\ 2 \end{bmatrix} = \begin{bmatrix} 4 \\ 0 \end{bmatrix} \quad \text{(Class B)}
+\end{align*}
+
+Now classes are more separable in the $z_2$ dimension!
+\end{example}
+
+\begin{example}[Neural Network Layer as Linear Transformation]
+\textbf{Single Layer Neural Network}:
+
+Input: $\mathbf{x} = [0.5, 0.8, 0.3]^T$
+
+Weight matrix:
+\[
+\mathbf{W} = \begin{bmatrix}
+0.2 & 0.5 & -0.3 \\
+0.7 & -0.1 & 0.4
+\end{bmatrix}
+\]
+
+Bias: $\mathbf{b} = [0.1, -0.2]^T$
+
+\textbf{Linear Transformation (pre-activation)}:
+\[
+\mathbf{z} = \mathbf{Wx} + \mathbf{b}
+\]
+
+\textbf{Calculation}:
+\[
+\mathbf{z} = \begin{bmatrix}
+0.2 & 0.5 & -0.3 \\
+0.7 & -0.1 & 0.4
+\end{bmatrix}
+\begin{bmatrix}
+0.5 \\ 0.8 \\ 0.3
+\end{bmatrix}
++ \begin{bmatrix}
+0.1 \\ -0.2
+\end{bmatrix}
+\]
+
+\[
+= \begin{bmatrix}
+0.2(0.5) + 0.5(0.8) + (-0.3)(0.3) \\
+0.7(0.5) + (-0.1)(0.8) + 0.4(0.3)
+\end{bmatrix}
++ \begin{bmatrix}
+0.1 \\ -0.2
+\end{bmatrix}
+\]
+
+\[
+= \begin{bmatrix}
+0.1 + 0.4 - 0.09 \\
+0.35 - 0.08 + 0.12
+\end{bmatrix}
++ \begin{bmatrix}
+0.1 \\ -0.2
+\end{bmatrix}
+= \begin{bmatrix}
+0.41 \\ 0.39
+\end{bmatrix}
++ \begin{bmatrix}
+0.1 \\ -0.2
+\end{bmatrix}
+= \begin{bmatrix}
+0.51 \\ 0.19
+\end{bmatrix}
+\]
+
+\textbf{After Activation (ReLU)}:
+\[
+\mathbf{a} = \text{ReLU}(\mathbf{z}) = \begin{bmatrix}
+\max(0, 0.51) \\
+\max(0, 0.19)
+\end{bmatrix}
+= \begin{bmatrix}
+0.51 \\ 0.19
+\end{bmatrix}
+\]
+
+The linear transformation $\mathbf{Wx} + \mathbf{b}$ maps 3D input to 2D hidden representation.
+\end{example}
+
+\newpage
+
+\section{3D Linear Transformations}
+
+\subsection{Introduction}
+
+\begin{tcolorbox}[enhanced,breakable,colback=defcolor,colframe=red!75!black,title=3D Transformations in ML/DL]
+3D transformations preserve points, lines, and planes. They're essential in computer vision for object recognition, 3D reconstruction, visualization, and geometric interpretation of data in 3D space.
+\end{tcolorbox}
+
+\subsection{Basic 3D Transformations}
+
+\subsubsection{3D Rotation Matrices}
+
+\begin{definition}[Rotation about Coordinate Axes]
+Rotation about x-axis by angle $\theta$:
+\[
+\mathbf{R}_x(\theta) = \begin{bmatrix}
+1 & 0 & 0 \\
+0 & \cos\theta & -\sin\theta \\
+0 & \sin\theta & \cos\theta
+\end{bmatrix}
+\]
+
+Rotation about y-axis by angle $\theta$:
+\[
+\mathbf{R}_y(\theta) = \begin{bmatrix}
+\cos\theta & 0 & \sin\theta \\
+0 & 1 & 0 \\
+-\sin\theta & 0 & \cos\theta
+\end{bmatrix}
+\]
+
+Rotation about z-axis by angle $\theta$:
+\[
+\mathbf{R}_z(\theta) = \begin{bmatrix}
+\cos\theta & -\sin\theta & 0 \\
+\sin\theta & \cos\theta & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\]
+\end{definition}
+
+\begin{example}[3D Rotation - Complete Calculation]
+Rotate point $\mathbf{p} = [1, 0, 0]^T$ by 90° about the z-axis:
+
+\textbf{Step 1}: Identify rotation matrix ($\theta = 90° = \pi/2$):
+\[
+\mathbf{R}_z(90°) = \begin{bmatrix}
+\cos(90°) & -\sin(90°) & 0 \\
+\sin(90°) & \cos(90°) & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+= \begin{bmatrix}
+0 & -1 & 0 \\
+1 & 0 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\]
+
+\textbf{Step 2}: Apply transformation:
+\[
+\mathbf{p}' = \mathbf{R}_z(90°)\mathbf{p} = \begin{bmatrix}
+0 & -1 & 0 \\
+1 & 0 & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 0 \\ 0
+\end{bmatrix}
+= \begin{bmatrix}
+0 \\ 1 \\ 0
+\end{bmatrix}
+\]
+
+Point $(1, 0, 0)$ rotates to $(0, 1, 0)$ on the xy-plane.
+
+\textbf{Geometric Interpretation}: The point moves from positive x-axis to positive y-axis while maintaining z-coordinate.
+\end{example}
+
+\begin{example}[Multiple 3D Rotations]
+Rotate point $[1, 1, 1]^T$ first by 90° about x-axis, then 45° about z-axis:
+
+\textbf{Step 1}: First rotation (x-axis, 90°):
+\[
+\mathbf{R}_x(90°) = \begin{bmatrix}
+1 & 0 & 0 \\
+0 & 0 & -1 \\
+0 & 1 & 0
+\end{bmatrix}
+\]
+
+\[
+\mathbf{p}_1 = \begin{bmatrix}
+1 & 0 & 0 \\
+0 & 0 & -1 \\
+0 & 1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 1 \\ 1
+\end{bmatrix}
+= \begin{bmatrix}
+1 \\ -1 \\ 1
+\end{bmatrix}
+\]
+
+\textbf{Step 2}: Second rotation (z-axis, 45°):
+\[
+\mathbf{R}_z(45°) = \begin{bmatrix}
+\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} & 0 \\
+\frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\]
+
+\[
+\mathbf{p}_2 = \begin{bmatrix}
+\frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} & 0 \\
+\frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} & 0 \\
+0 & 0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ -1 \\ 1
+\end{bmatrix}
+= \begin{bmatrix}
+\frac{1}{\sqrt{2}} + \frac{1}{\sqrt{2}} \\
+\frac{1}{\sqrt{2}} - \frac{1}{\sqrt{2}} \\
+1
+\end{bmatrix}
+= \begin{bmatrix}
+\sqrt{2} \\ 0 \\ 1
+\end{bmatrix}
+\]
+
+\textbf{Combined Rotation}:
+\[
+\mathbf{R}_{combined} = \mathbf{R}_z(45°)\mathbf{R}_x(90°)
+\]
+\end{example}
+
+\subsubsection{3D Scaling}
+
+\begin{definition}[3D Scaling Matrix]
+\[
+\mathbf{S}(s_x, s_y, s_z) = \begin{bmatrix}
+s_x & 0 & 0 \\
+0 & s_y & 0 \\
+0 & 0 & s_z
+\end{bmatrix}
+\]
+\end{definition}
+
+\begin{example}[3D Scaling for 3D Point Cloud]
+Scale a 3D point cloud representing an object:
+
+Points: $\mathbf{p}_1 = [1, 2, 3]^T$, $\mathbf{p}_2 = [2, 3, 4]^T$
+
+Scaling: $s_x = 2, s_y = 2, s_z = 0.5$ (compress in z, expand in x,y)
+
+\[
+\mathbf{S} = \begin{bmatrix}
+2 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 0.5
+\end{bmatrix}
+\]
+
+\[
+\mathbf{p}_1' = \begin{bmatrix}
+2 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 0.5
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 2 \\ 3
+\end{bmatrix}
+= \begin{bmatrix}
+2 \\ 4 \\ 1.5
+\end{bmatrix}
+\]
+
+\[
+\mathbf{p}_2' = \begin{bmatrix}
+2 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 0.5
+\end{bmatrix}
+\begin{bmatrix}
+2 \\ 3 \\ 4
+\end{bmatrix}
+= \begin{bmatrix}
+4 \\ 6 \\ 2
+\end{bmatrix}
+\]
+
+\textbf{ML Application}: Used in 3D object augmentation for training robust 3D detectors.
+\end{example}
+
+\subsection{Computer Vision Application}
+
+\begin{example}[Camera Projection - 3D to 2D]
+\textbf{Problem}: Project 3D world point to 2D image plane.
+
+3D point in world: $\mathbf{P}_w = [X, Y, Z]^T$
+
+Camera at origin, looking down z-axis, focal length $f = 500$ pixels.
+
+\textbf{Perspective Projection}:
+\[
+\begin{bmatrix}
+u \\ v \\ 1
+\end{bmatrix}
+= \frac{1}{Z}
+\begin{bmatrix}
+f & 0 & 0 & 0 \\
+0 & f & 0 & 0 \\
+0 & 0 & 1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+X \\ Y \\ Z \\ 1
+\end{bmatrix}
+\]
+
+\textbf{Numerical Example}:
+
+Point: $\mathbf{P}_w = [100, 200, 1000]^T$ (in mm)
+
+\[
+\begin{bmatrix}
+u \\ v \\ w
+\end{bmatrix}
+= \begin{bmatrix}
+500 & 0 & 0 & 0 \\
+0 & 500 & 0 & 0 \\
+0 & 0 & 1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+100 \\ 200 \\ 1000 \\ 1
+\end{bmatrix}
+= \begin{bmatrix}
+50000 \\ 100000 \\ 1000
+\end{bmatrix}
+\]
+
+Convert to pixel coordinates:
+\[
+u = \frac{50000}{1000} = 50, \quad v = \frac{100000}{1000} = 100
+\]
+
+Image point: $(50, 100)$ pixels
+\end{example}
+
+\newpage
+
+\section{Matrix Multiplication as Composition}
+
+\subsection{Introduction and Significance}
+
+\begin{tcolorbox}[enhanced,breakable,colback=defcolor,colframe=red!75!black,title=Composition in ML/DL]
+In machine learning and deep learning, sequential transformations are represented by matrix multiplication. Each layer of a neural network performs a transformation, and the composition represents the entire network. This is fundamental to understanding deep architectures.
+\end{tcolorbox}
+
+\subsection{Composition of Linear Transformations}
+
+\begin{definition}[Composition]
+If $T_1: \mathbb{R}^n \rightarrow \mathbb{R}^m$ and $T_2: \mathbb{R}^m \rightarrow \mathbb{R}^p$ are linear transformations with matrices $\mathbf{A}_1$ and $\mathbf{A}_2$, their composition is:
+\[
+(T_2 \circ T_1)(\mathbf{x}) = T_2(T_1(\mathbf{x})) = \mathbf{A}_2(\mathbf{A}_1\mathbf{x}) = (\mathbf{A}_2\mathbf{A}_1)\mathbf{x}
+\]
+
+The matrix of the composition is $\mathbf{A}_2\mathbf{A}_1$.
+\end{definition}
+
+\begin{property}[Properties of Composition]
+\begin{enumerate}
+\item \textbf{Associativity}: $(\mathbf{A}_3\mathbf{A}_2)\mathbf{A}_1 = \mathbf{A}_3(\mathbf{A}_2\mathbf{A}_1)$
+\item \textbf{Non-commutativity}: Generally $\mathbf{A}_2\mathbf{A}_1 \neq \mathbf{A}_1\mathbf{A}_2$
+\item \textbf{Identity}: $\mathbf{IA} = \mathbf{AI} = \mathbf{A}$
+\item \textbf{Inverse of composition}: $(\mathbf{AB})^{-1} = \mathbf{B}^{-1}\mathbf{A}^{-1}$
+\end{enumerate}
+\end{property}
+
+\begin{example}[Simple Composition - Geometric Transformations]
+Apply scaling then rotation to point $[1, 0]^T$:
+
+\textbf{Transformation 1 - Scale by 2}:
+\[
+\mathbf{S} = \begin{bmatrix}
+2 & 0 \\
+0 & 2
+\end{bmatrix}
+\]
+
+\textbf{Transformation 2 - Rotate 90°}:
+\[
+\mathbf{R} = \begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix}
+\]
+
+\textbf{Method 1: Sequential Application}
+
+Step 1 - Scale:
+\[
+\mathbf{v}_1 = \mathbf{S}\mathbf{v} = \begin{bmatrix}
+2 & 0 \\
+0 & 2
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 0
+\end{bmatrix}
+= \begin{bmatrix}
+2 \\ 0
+\end{bmatrix}
+\]
+
+Step 2 - Rotate:
+\[
+\mathbf{v}_2 = \mathbf{R}\mathbf{v}_1 = \begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+2 \\ 0
+\end{bmatrix}
+= \begin{bmatrix}
+0 \\ 2
+\end{bmatrix}
+\]
+
+\textbf{Method 2: Composed Matrix}
+
+\[
+\mathbf{C} = \mathbf{R}\mathbf{S} = \begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix}
+\begin{bmatrix}
+2 & 0 \\
+0 & 2
+\end{bmatrix}
+= \begin{bmatrix}
+0(2) + (-1)(0) & 0(0) + (-1)(2) \\
+1(2) + 0(0) & 1(0) + 0(2)
+\end{bmatrix}
+= \begin{bmatrix}
+0 & -2 \\
+2 & 0
+\end{bmatrix}
+\]
+
+Apply composed transformation:
+\[
+\mathbf{v}_2 = \mathbf{C}\mathbf{v} = \begin{bmatrix}
+0 & -2 \\
+2 & 0
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 0
+\end{bmatrix}
+= \begin{bmatrix}
+0 \\ 2
+\end{bmatrix}
+\]
+
+Both methods give the same result! ✓
+
+\textbf{Compare: Different Order}
+
+If we rotate then scale ($\mathbf{SR}$):
+\[
+\mathbf{C}' = \mathbf{S}\mathbf{R} = \begin{bmatrix}
+2 & 0 \\
+0 & 2
+\end{bmatrix}
+\begin{bmatrix}
+0 & -1 \\
+1 & 0
+\end{bmatrix}
+= \begin{bmatrix}
+0 & -2 \\
+2 & 0
+\end{bmatrix}
+\]
+
+In this case $\mathbf{SR} = \mathbf{RS}$ because scaling is uniform. But generally, order matters!
+\end{example}
+
+\begin{example}[Non-Commutativity of Matrix Multiplication]
+\textbf{Transformation 1}: Horizontal shear with $k=1$
+\[
+\mathbf{H} = \begin{bmatrix}
+1 & 1 \\
+0 & 1
+\end{bmatrix}
+\]
+
+\textbf{Transformation 2}: Scale by $(2, 1)$
+\[
+\mathbf{S} = \begin{bmatrix}
+2 & 0 \\
+0 & 1
+\end{bmatrix}
+\]
+
+\textbf{Composition 1}: $\mathbf{S}\mathbf{H}$ (shear then scale)
+\[
+\mathbf{S}\mathbf{H} = \begin{bmatrix}
+2 & 0 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 & 1 \\
+0 & 1
+\end{bmatrix}
+= \begin{bmatrix}
+2 & 2 \\
+0 & 1
+\end{bmatrix}
+\]
+
+\textbf{Composition 2}: $\mathbf{H}\mathbf{S}$ (scale then shear)
+\[
+\mathbf{H}\mathbf{S} = \begin{bmatrix}
+1 & 1 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+2 & 0 \\
+0 & 1
+\end{bmatrix}
+= \begin{bmatrix}
+2 & 1 \\
+0 & 1
+\end{bmatrix}
+\]
+
+Clearly $\mathbf{S}\mathbf{H} \neq \mathbf{H}\mathbf{S}$! Order matters.
+
+\textbf{Apply to point $[1, 1]^T$}:
+
+$\mathbf{S}\mathbf{H}$ gives:
+\[
+\begin{bmatrix}
+2 & 2 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 1
+\end{bmatrix}
+= \begin{bmatrix}
+4 \\ 1
+\end{bmatrix}
+\]
+
+$\mathbf{H}\mathbf{S}$ gives:
+\[
+\begin{bmatrix}
+2 & 1 \\
+0 & 1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 1
+\end{bmatrix}
+= \begin{bmatrix}
+3 \\ 1
+\end{bmatrix}
+\]
+
+Different results!
+\end{example}
+
+\subsection{Deep Learning Application: Multi-Layer Neural Networks}
+
+\begin{example}[Two-Layer Neural Network as Matrix Composition]
+\textbf{Architecture}:
+\begin{itemize}
+\item Input layer: 3 neurons
+\item Hidden layer: 4 neurons
+\item Output layer: 2 neurons
+\end{itemize}
+
+\textbf{Weight Matrices}:
+
+Layer 1 (input to hidden):
+\[
+\mathbf{W}_1 = \begin{bmatrix}
+0.5 & 0.2 & -0.3 \\
+-0.1 & 0.4 & 0.6 \\
+0.3 & -0.2 & 0.1 \\
+0.7 & 0.5 & -0.4
+\end{bmatrix} \in \mathbb{R}^{4 \times 3}
+\]
+
+Layer 2 (hidden to output):
+\[
+\mathbf{W}_2 = \begin{bmatrix}
+0.8 & -0.2 & 0.5 & 0.3 \\
+-0.4 & 0.6 & 0.1 & -0.3
+\end{bmatrix} \in \mathbb{R}^{2 \times 4}
+\]
+
+\textbf{Input}:
+\[
+\mathbf{x} = \begin{bmatrix}
+0.5 \\ 0.3 \\ 0.8
+\end{bmatrix}
+\]
+
+\textbf{Forward Pass - Step by Step}:
+
+Step 1: Input to hidden (linear):
+\[
+\mathbf{z}_1 = \mathbf{W}_1\mathbf{x} = \begin{bmatrix}
+0.5 & 0.2 & -0.3 \\
+-0.1 & 0.4 & 0.6 \\
+0.3 & -0.2 & 0.1 \\
+0.7 & 0.5 & -0.4
+\end{bmatrix}
+\begin{bmatrix}
+0.5 \\ 0.3 \\ 0.8
+\end{bmatrix}
+\]
+
+Calculating each element:
+\begin{align*}
+z_{1,1} &= 0.5(0.5) + 0.2(0.3) + (-0.3)(0.8) = 0.25 + 0.06 - 0.24 = 0.07 \\
+z_{1,2} &= -0.1(0.5) + 0.4(0.3) + 0.6(0.8) = -0.05 + 0.12 + 0.48 = 0.55 \\
+z_{1,3} &= 0.3(0.5) + (-0.2)(0.3) + 0.1(0.8) = 0.15 - 0.06 + 0.08 = 0.17 \\
+z_{1,4} &= 0.7(0.5) + 0.5(0.3) + (-0.4)(0.8) = 0.35 + 0.15 - 0.32 = 0.18
+\end{align*}
+
+\[
+\mathbf{z}_1 = \begin{bmatrix}
+0.07 \\ 0.55 \\ 0.17 \\ 0.18
+\end{bmatrix}
+\]
+
+Step 2: Apply activation (ReLU):
+\[
+\mathbf{a}_1 = \text{ReLU}(\mathbf{z}_1) = \begin{bmatrix}
+0.07 \\ 0.55 \\ 0.17 \\ 0.18
+\end{bmatrix}
+\]
+(all positive, so unchanged)
+
+Step 3: Hidden to output (linear):
+\[
+\mathbf{z}_2 = \mathbf{W}_2\mathbf{a}_1 = \begin{bmatrix}
+0.8 & -0.2 & 0.5 & 0.3 \\
+-0.4 & 0.6 & 0.1 & -0.3
+\end{bmatrix}
+\begin{bmatrix}
+0.07 \\ 0.55 \\ 0.17 \\ 0.18
+\end{bmatrix}
+\]
+
+Calculating:
+\begin{align*}
+z_{2,1} &= 0.8(0.07) + (-0.2)(0.55) + 0.5(0.17) + 0.3(0.18) \\
+&= 0.056 - 0.11 + 0.085 + 0.054 = 0.085 \\
+z_{2,2} &= -0.4(0.07) + 0.6(0.55) + 0.1(0.17) + (-0.3)(0.18) \\
+&= -0.028 + 0.33 + 0.017 - 0.054 = 0.265
+\end{align*}
+
+\[
+\mathbf{z}_2 = \begin{bmatrix}
+0.085 \\ 0.265
+\end{bmatrix}
+\]
+
+\textbf{Interpretation of Composition}:
+
+Without activation functions, the network would be:
+\[
+\mathbf{z}_2 = \mathbf{W}_2(\mathbf{W}_1\mathbf{x}) = (\mathbf{W}_2\mathbf{W}_1)\mathbf{x}
+\]
+
+This is just a single linear transformation! This is why activation functions are crucial—they break the linearity.
+
+\textbf{Effective Weight Matrix (if no activation)}:
+\[
+\mathbf{W}_{eff} = \mathbf{W}_2\mathbf{W}_1 \in \mathbb{R}^{2 \times 3}
+\]
+
+This demonstrates why deep networks need non-linearities!
+\end{example}
+
+\begin{example}[Convolutional Layer as Matrix Multiplication]
+\textbf{Problem}: Understand convolution as matrix operation.
+
+Input: $3 \times 3$ image
+\[
+\mathbf{I} = \begin{bmatrix}
+1 & 2 & 3 \\
+4 & 5 & 6 \\
+7 & 8 & 9
+\end{bmatrix}
+\]
+
+Kernel: $2 \times 2$ filter
+\[
+\mathbf{K} = \begin{bmatrix}
+1 & 0 \\
+0 & -1
+\end{bmatrix}
+\]
+
+\textbf{Flatten image to vector}:
+\[
+\mathbf{x} = [1, 2, 3, 4, 5, 6, 7, 8, 9]^T
+\]
+
+\textbf{Construct Toeplitz matrix for convolution}:
+
+Each row corresponds to one position of the filter:
+\[
+\mathbf{C} = \begin{bmatrix}
+1 & 0 & 0 & 0 & -1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & -1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 & -1 & 0 \\
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & -1
+\end{bmatrix}
+\]
+
+\textbf{Apply convolution as matrix multiplication}:
+\[
+\mathbf{y} = \mathbf{C}\mathbf{x} = \begin{bmatrix}
+1 & 0 & 0 & 0 & -1 & 0 & 0 & 0 & 0 \\
+0 & 1 & 0 & 0 & 0 & -1 & 0 & 0 & 0 \\
+0 & 0 & 0 & 1 & 0 & 0 & 0 & -1 & 0 \\
+0 & 0 & 0 & 0 & 1 & 0 & 0 & 0 & -1
+\end{bmatrix}
+\begin{bmatrix}
+1 \\ 2 \\ 3 \\ 4 \\ 5 \\ 6 \\ 7 \\ 8 \\ 9
+\end{bmatrix}
+\]
+
+Computing each output:
+\begin{align*}
+y_1 &= 1(1) + (-1)(5) = 1 - 5 = -4 \\
+y_2 &= 1(2) + (-1)(6) = 2 - 6 = -4 \\
+y_3 &= 1(4) + (-1)(8) = 4 - 8 = -4 \\
+y_4 &= 1(5) + (-1)(9) = 5 - 9 = -4
+\end{align*}
+
+\[
+\mathbf{y} = \begin{bmatrix}
+-4 \\ -4 \\ -4 \\ -4
+\end{bmatrix}
+\]
+
+Reshape to $2 \times 2$:
+\[
+\mathbf{Y} = \begin{bmatrix}
+-4 & -4 \\
+-4 & -4
+\end{bmatrix}
+\]
+
+This shows convolution is a linear transformation!
+\end{example}
+
+\subsection{Practical Implications}
+
+\begin{tcolorbox}[enhanced,breakable,colback=yellow!10!white,colframe=orange!75!black,title=Key Takeaways for ML/DL]
+\begin{enumerate}
+\item \textbf{Network Depth}: Multiple layers compose transformations, creating complex decision boundaries
+\item \textbf{Parameter Efficiency}: Composition allows learning hierarchical features
+\item \textbf{Gradient Flow}: Backpropagation uses chain rule through composed transformations
+\item \textbf{Geometric Interpretation}: Each layer transforms data geometry
+\item \textbf{Non-commutativity}: Layer order matters significantly
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Computational Efficiency}
+
+\begin{example}[Efficiency of Matrix Composition]
+\textbf{Scenario}: Apply 3 transformations to 1000 data points.
+
+\textbf{Matrices}:
+\begin{itemize}
+\item $\mathbf{A}_1 \in \mathbb{R}^{100 \times 50}$
+\item $\mathbf{A}_2 \in \mathbb{R}^{75 \times 100}$
+\item $\mathbf{A}_3 \in \mathbb{R}^{50 \times 75}$
+\end{itemize}
+
+\textbf{Data}: $\mathbf{X} \in \mathbb{R}^{50 \times 1000}$ (50 features, 1000 samples)
+
+\textbf{Method 1 - Sequential}: Apply to each point separately
+\[
+\mathbf{Y} = \mathbf{A}_3(\mathbf{A}_2(\mathbf{A}_1\mathbf{X}))
+\]
+
+Operations:
+\begin{align*}
+\mathbf{A}_1\mathbf{X} &: 100 \times 50 \times 1000 = 5,000,000 \text{ ops} \\
+\mathbf{A}_2(\cdot) &: 75 \times 100 \times 1000 = 7,500,000 \text{ ops} \\
+\mathbf{A}_3(\cdot) &: 50 \times 75 \times 1000 = 3,750,000 \text{ ops}
+\end{align*}
+
+Total: $16,250,000$ operations
+
+\textbf{Method 2 - Pre-compose (if reusing)}:
+\[
+\mathbf{A}_{comp} = \mathbf{A}_3\mathbf{A}_2\mathbf{A}_1
+\]
+
+Composition cost:
+\begin{align*}
+\mathbf{A}_2\mathbf{A}_1 &: 75 \times 100 \times 50 = 375,000 \text{ ops} \\
+\mathbf{A}_3(\cdot) &: 50 \times 75 \times 100 = 375,000 \text{ ops}
+\end{align*}
+
+Composition total: $750,000$ ops
+
+Apply to data: $50 \times 50 \times 1000 = 2,500,000$ ops
+
+Total: $3,250,000$ operations (5× faster!)
+
+\textbf{Lesson}: Pre-composition is efficient when transforming many points with same sequence.
+\end{example}
+
+\section{Summary and Connections}
+
+\begin{tcolorbox}[enhanced,breakable,colback=green!10!white,colframe=green!50!black,title=Unified View]
+\textbf{Solving Linear Systems} $\leftrightarrow$ Finding optimal parameters (regression, neural networks)
+
+\textbf{Linear Transformations} $\leftrightarrow$ Feature mapping, data preprocessing, layer operations
+
+\textbf{3D Transformations} $\leftrightarrow$ Computer vision, 3D understanding, geometric deep learning
+
+\textbf{Matrix Composition} $\leftrightarrow$ Multi-layer networks, transformation pipelines, transfer learning
+\end{tcolorbox}
+
+\subsection{Practical Checklist for ML/DL Practitioners}
+
+\begin{enumerate}
+\item When solving for model parameters, consider:
+\begin{itemize}
+\item System solvability (existence/uniqueness)
+\item Numerical stability
+\item Computational complexity
+\end{itemize}
+
+\item When designing transformations:
+\begin{itemize}
+\item Preserve important properties
+\item Consider invertibility
+\item Check for information loss
+\end{itemize}
+
+\item When composing layers:
+\begin{itemize}
+\item Order matters (non-commutativity)
+\item Add non-linearities between linear layers
+\item Monitor gradient flow
+\end{itemize}
+
+\item When working with 3D data:
+\begin{itemize}
+\item Use appropriate augmentations (rotation, scaling)
+\item Preserve geometric relationships
+\item Consider computational cost
+\end{itemize}
+\end{enumerate}
+
+\newpage
+
+\section{Assessment Questions}
+
+\subsection{Level 1: Basic Understanding}
+
+\begin{enumerate}
+\item \textbf{What is a system of linear equations?} Provide two examples from machine learning.
+
+\item \textbf{Give three methods} for solving a system of linear equations and their computational complexities.
+
+\item \textbf{What is the difference between a linear transformation and a general function?} Provide examples.
+
+\item \textbf{Calculate}: Solve the system:
+\[
+\begin{cases}
+2x + y = 5 \\
+x - y = 1
+\end{cases}
+\]
+
+\item \textbf{If} $\mathbf{A} = \begin{bmatrix} 2 & 1 \\ 0 & 3 \end{bmatrix}$ and $\mathbf{v} = \begin{bmatrix} 1 \\ 2 \end{bmatrix}$, find $\mathbf{Av}$.
+
+\item \textbf{True or False}: Every linear transformation can be represented by a matrix.
+
+\item \textbf{Identify whether each is a linear transformation}:
+\begin{enumerate}[label=(\alph*)]
+\item $T(x) = 2x + 3$
+\item $T(x, y) = (2x, 3y)$
+\item $T(x) = x^2$
+\end{enumerate}
+
+\item \textbf{Compute}: $\mathbf{R}(90°)\begin{bmatrix} 1 \\ 0 \end{bmatrix}$ where $\mathbf{R}$ is rotation matrix.
+
+\item \textbf{What are the two fundamental properties} that define a linear transformation?
+
+\item \textbf{Why is matrix multiplication} generally non-commutative? Give an example.
+\end{enumerate}
+
+\subsection{Level 2: Intermediate}
+
+\begin{enumerate}[resume]
+\item \textbf{What is the role of solving linear systems in linear regression?} Provide the normal equations.
+
+\item \textbf{Compute} the LU decomposition of $\mathbf{A} = \begin{bmatrix} 2 & 4 \\ 1 & 3 \end{bmatrix}$.
+
+\item \textbf{State the projection formula} and explain its meaning in PCA.
+
+\item \textbf{Given} $\mathbf{A} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix}$ and $\mathbf{B} = \begin{bmatrix} 2 & 0 \\ 1 & 3 \end{bmatrix}$, compute $\mathbf{AB}$ and $\mathbf{BA}$.
+
+\item \textbf{What is the kernel (null space)} of a linear transformation? Give geometric interpretation.
+
+\item \textbf{Given transformation} $T(x, y) = (x + 2y, 3x - y)$, find its matrix representation.
+
+\item \textbf{Calculate}: Apply shear transformation with $k=2$ to point $(1, 3)$.
+
+\item \textbf{If} $\mathbf{W} = \begin{bmatrix} 0.5 & -0.3 \\ 0.2 & 0.8 \end{bmatrix}$, find $\mathbf{Wx}$ where $\mathbf{x} = \begin{bmatrix} 1 \\ 1 \end{bmatrix}$.
+
+\item \textbf{Solve using Gaussian elimination}:
+\[
+\begin{cases}
+x + 2y - z = 3 \\
+2x + y + z = 1 \\
+x - y + z = -1
+\end{cases}
+\]
+
+\item \textbf{Calculate} the composition of scaling by 2 and rotation by 45°.
+\end{enumerate}
+
+\subsection{Level 3: Advanced}
+
+\begin{enumerate}[resume]
+\item \textbf{Prove} that the composition of linear transformations is associative: $(T_3 \circ T_2) \circ T_1 = T_3 \circ (T_2 \circ T_1)$.
+
+\item \textbf{Why does a neural network without activation functions} collapse to a single linear transformation?
+
+\item \textbf{Explain the role of matrix multiplication} in the backpropagation algorithm for multi-layer networks.
+
+\item \textbf{Compare the computational complexity} of solving $\mathbf{Ax} = \mathbf{b}$ using:
+\begin{enumerate}[label=(\alph*)]
+\item Gaussian elimination
+\item Matrix inverse
+\item LU decomposition
+\end{enumerate}
+
+\item \textbf{Design a feature transformation strategy} using linear transformations to make data linearly separable.
+
+\item \textbf{Explain how 3D transformations} are used in data augmentation for computer vision. Provide specific transformation matrices.
+
+\item \textbf{What happens to the determinant} when you compose two transformations? Prove your answer.
+
+\item \textbf{Prove} that matrix multiplication is distributive: $\mathbf{A}(\mathbf{B} + \mathbf{C}) = \mathbf{AB} + \mathbf{AC}$.
+
+\item \textbf{Explain the relationship between eigenvalues} and the behavior of iterative methods for solving linear systems.
+
+\item \textbf{How do you determine} if a system of linear equations is over-determined, under-determined, or exactly determined? What are the implications for machine learning?
+\end{enumerate}
+
+\subsection{Multiple Choice Questions}
+
+\begin{enumerate}[resume]
+\item The solution to $\mathbf{Ax} = \mathbf{b}$ is unique if and only if:
+\begin{enumerate}[label=(\alph*)]
+\item $\mathbf{A}$ is square
+\item $\mathbf{A}$ is invertible
+\item $\mathbf{A}$ is symmetric
+\item $\mathbf{A}$ is diagonal
+\end{enumerate}
+
+\item In neural networks, if all layers use only linear transformations without activations:
+\begin{enumerate}[label=(\alph*)]
+\item The network can learn any function
+\item The network reduces to a single linear transformation
+\item The network cannot be trained
+\item The network trains faster
+\end{enumerate}
+
+\item The rank-nullity theorem states:
+\begin{enumerate}[label=(\alph*)]
+\item rank($\mathbf{A}$) + nullity($\mathbf{A}$) = number of rows
+\item rank($\mathbf{A}$) + nullity($\mathbf{A}$) = number of columns
+\item rank($\mathbf{A}$) $\times$ nullity($\mathbf{A}$) = determinant
+\item rank($\mathbf{A}$) = nullity($\mathbf{A}$)
+\end{enumerate}
+
+\item Which of the following is NOT preserved by linear transformations?
+\begin{enumerate}[label=(\alph*)]
+\item Collinearity
+\item Parallelism
+\item Angles
+\item Ratios of distances along a line
+\end{enumerate}
+
+\item The computational complexity of matrix multiplication for $\mathbf{A} \in \mathbb{R}^{m \times n}$ and $\mathbf{B} \in \mathbb{R}^{n \times p}$ is:
+\begin{enumerate}[label=(\alph*)]
+\item $O(mnp)$
+\item $O(m + n + p)$
+\item $O(\max(m,n,p))$
+\item $O(n^2)$
+\end{enumerate}
+\end{enumerate}
+
+\subsection{Programming Exercises}
+
+\begin{enumerate}[label=\textbf{P\arabic*.}]
+\item Implement Gaussian elimination in Python without using NumPy's built-in solvers.
+
+\item Write a function to compute LU decomposition and solve a system using forward and backward substitution.
+
+\item Create a class that represents a 2D linear transformation with methods for composition, inversion, and application to points.
+
+\item Implement a simple neural network layer that performs $\mathbf{y} = \mathbf{Wx} + \mathbf{b}$ and its gradient computation.
+
+\item Build a linear regression solver using the normal equations and compare with gradient descent.
+\end{enumerate}
+
+\newpage
+
+\section{Solutions to Assessment Questions}
+
+\subsection{Level 1 Solutions}
+
+\textbf{A1.} A system of linear equations is a collection of two or more linear equations involving the same variables. 
+
+\textit{ML Examples:}
+\begin{enumerate}
+\item \textit{Linear Regression}: The normal equations $\mathbf{X}^T\mathbf{X}\boldsymbol{\theta} = \mathbf{X}^T\mathbf{y}$ form a system to find optimal parameters.
+\item \textit{Neural Network Weight Update}: Solving for weight updates in least-squares problems.
+\end{enumerate}
+
+\textit{Explanation}: Systems of linear equations are fundamental in finding optimal parameters in many ML algorithms.
+
+\textbf{A2.} Three methods:
+\begin{enumerate}
+\item \textbf{Gaussian Elimination}: $O(n^3)$ time complexity
+\item \textbf{LU Decomposition}: $O(n^3)$ for decomposition, $O(n^2)$ for each solve
+\item \textbf{Matrix Inverse}: $O(n^3)$ time complexity
+\end{enumerate}
+
+\textbf{A3.} A linear transformation satisfies $T(a\mathbf{u} + b\mathbf{v}) = aT(\mathbf{u}) + bT(\mathbf{v})$ for all scalars $a, b$ and vectors $\mathbf{u}, \mathbf{v}$.
+
+\textit{Examples:}
+\begin{itemize}
+\item \textit{Linear}: $T(x, y) = (2x + y, x - 3y)$ — satisfies additivity and homogeneity
+\item \textit{Not Linear}: $T(x, y) = (x + 1, y)$ — doesn't map zero to zero
+\item \textit{Not Linear}: $T(x) = x^2$ — doesn't satisfy $T(2x) = 2T(x)$
+\end{itemize}
+
+\textbf{A4.}
+\begin{align*}
+2x + y &= 5 \quad \text{...(1)} \\
+x - y &= 1 \quad \text{...(2)}
+\end{align*}
+
+Add equations (1) and (2):
+\[
+(2x + y) + (x - y) = 5 + 1
+\]
+\[
+3x = 6 \Rightarrow x = 2
+\]
+
+Substitute into (2):
+\[
+2 - y = 1 \Rightarrow y = 1
+\]
+
+\textbf{Solution}: $x = 2, y = 1$
+
+\textit{Verification}:
+\begin{align*}
+2(2) + 1 &= 5 \checkmark \\
+2 - 1 &= 1 \checkmark
+\end{align*}
+
+\textbf{A5.}
+\[
+\mathbf{Av} = \begin{bmatrix} 2 & 1 \\ 0 & 3 \end{bmatrix} \begin{bmatrix} 1 \\ 2 \end{bmatrix} = \begin{bmatrix} 2(1) + 1(2) \\ 0(1) + 3(2) \end{bmatrix} = \begin{bmatrix} 4 \\ 6 \end{bmatrix}
+\]
+
+\textbf{A6.} \textbf{True}. Every linear transformation from $\mathbb{R}^n$ to $\mathbb{R}^m$ can be uniquely represented by an $m \times n$ matrix.
+
+\textit{Explanation}: The matrix columns are the images of the standard basis vectors.
+
+\textbf{A7.}
+\begin{enumerate}[label=(\alph*)]
+\item $T(x) = 2x + 3$ — \textbf{NOT linear} (doesn't map 0 to 0)
+\item $T(x, y) = (2x, 3y)$ — \textbf{Linear} (satisfies both properties)
+\item $T(x) = x^2$ — \textbf{NOT linear} ($T(2x) = 4x^2 \neq 2x^2 = 2T(x)$)
+\end{enumerate}
+
+\textbf{A8.}
+\[
+\mathbf{R}(90°) = \begin{bmatrix} \cos 90° & -\sin 90° \\ \sin 90° & \cos 90° \end{bmatrix} = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix}
+\]
+
+\[
+\mathbf{R}(90°)\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 & -1 \\ 1 & 0 \end{bmatrix} \begin{bmatrix} 1 \\ 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+\]
+
+\textit{Explanation}: Point $(1, 0)$ on x-axis rotates to $(0, 1)$ on y-axis.
+
+\textbf{A9.} The two fundamental properties are:
+\begin{enumerate}
+\item \textbf{Additivity}: $T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})$
+\item \textbf{Homogeneity}: $T(c\mathbf{u}) = cT(\mathbf{u})$ for any scalar $c$
+\end{enumerate}
+
+\textbf{A10.} Matrix multiplication is non-commutative because the dimensions or the transformation order matters.
+
+\textit{Example}:
+\[
+\mathbf{A} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix}, \quad \mathbf{B} = \begin{bmatrix} 1 & 0 \\ 3 & 1 \end{bmatrix}
+\]
+
+\[
+\mathbf{AB} = \begin{bmatrix} 7 & 2 \\ 3 & 1 \end{bmatrix}, \quad \mathbf{BA} = \begin{bmatrix} 1 & 2 \\ 3 & 7 \end{bmatrix}
+\]
+
+Clearly $\mathbf{AB} \neq \mathbf{BA}$.
+
+\subsection{Level 2 Solutions}
+
+\textbf{A11.} In linear regression, we minimize $\|\mathbf{y} - \mathbf{X}\boldsymbol{\theta}\|^2$ which leads to the normal equations:
+\[
+\mathbf{X}^T\mathbf{X}\boldsymbol{\theta} = \mathbf{X}^T\mathbf{y}
+\]
+
+This is a system of linear equations where:
+\begin{itemize}
+\item $\mathbf{X}^T\mathbf{X}$ is the coefficient matrix
+\item $\boldsymbol{\theta}$ is the unknown parameter vector
+\item $\mathbf{X}^T\mathbf{y}$ is the constant vector
+\end{itemize}
+
+\textit{Explanation}: Solving this system gives the optimal least-squares solution.
+
+\textbf{A12.} LU decomposition of $\mathbf{A} = \begin{bmatrix} 2 & 4 \\ 1 & 3 \end{bmatrix}$:
+
+\textit{Step 1}: First elimination step
+
+Multiplier: $l_{21} = \frac{1}{2}$
+
+After elimination:
+\[
+\mathbf{U} = \begin{bmatrix} 2 & 4 \\ 0 & 1 \end{bmatrix}
+\]
+
+\textit{Step 2}: Record multipliers in $\mathbf{L}$:
+\[
+\mathbf{L} = \begin{bmatrix} 1 & 0 \\ 1/2 & 1 \end{bmatrix}
+\]
+
+\textit{Verification}:
+\[
+\mathbf{LU} = \begin{bmatrix} 1 & 0 \\ 1/2 & 1 \end{bmatrix} \begin{bmatrix} 2 & 4 \\ 0 & 1 \end{bmatrix} = \begin{bmatrix} 2 & 4 \\ 1 & 3 \end{bmatrix} = \mathbf{A} \checkmark
+\]
+
+\textbf{A13.} \textbf{Projection formula}: For projecting vector $\mathbf{v}$ onto unit vector $\mathbf{u}$:
+\[
+\text{proj}_{\mathbf{u}}(\mathbf{v}) = (\mathbf{v} \cdot \mathbf{u})\mathbf{u} = (\mathbf{u}\mathbf{u}^T)\mathbf{v}
+\]
+
+\textit{In PCA}: Data is projected onto principal components (eigenvectors):
+\[
+\mathbf{x}_{\text{projected}} = \mathbf{U}_k\mathbf{U}_k^T\mathbf{x}
+\]
+where $\mathbf{U}_k$ contains the top $k$ eigenvectors.
+
+\textit{Meaning}: Projects high-dimensional data onto lower-dimensional subspace that captures maximum variance.
+
+\textbf{A14.}
+\[
+\mathbf{AB} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} 2 & 0 \\ 1 & 3 \end{bmatrix} = \begin{bmatrix} 4 & 6 \\ 1 & 3 \end{bmatrix}
+\]
+
+\[
+\mathbf{BA} = \begin{bmatrix} 2 & 0 \\ 1 & 3 \end{bmatrix} \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix} = \begin{bmatrix} 2 & 4 \\ 1 & 5 \end{bmatrix}
+\]
+
+Note: $\mathbf{AB} \neq \mathbf{BA}$ (non-commutative)
+
+\textbf{A15.} The \textbf{kernel (null space)} of $T$ is:
+\[
+\ker(T) = \{\mathbf{v} : T(\mathbf{v}) = \mathbf{0}\}
+\]
+
+\textit{Geometric interpretation}: All vectors that get "collapsed" to the zero vector.
+
+\textit{Example}: For projection onto a line, the kernel is all vectors perpendicular to that line.
+
+\textit{ML relevance}: In neural networks, if many inputs map to zero, the transformation loses information.
+
+\textbf{A16.} $T(x, y) = (x + 2y, 3x - y)$
+
+Matrix representation: Find where basis vectors map:
+\begin{align*}
+T(1, 0) &= (1, 3) \\
+T(0, 1) &= (2, -1)
+\end{align*}
+
+These form the columns:
+\[
+\mathbf{A} = \begin{bmatrix} 1 & 2 \\ 3 & -1 \end{bmatrix}
+\]
+
+\textit{Verification}:
+\[
+\begin{bmatrix} 1 & 2 \\ 3 & -1 \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix} = \begin{bmatrix} x + 2y \\ 3x - y \end{bmatrix} \checkmark
+\]
+
+\textbf{A17.} Horizontal shear: $\mathbf{S} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix}$
+
+\[
+\mathbf{S}\begin{bmatrix} 1 \\ 3 \end{bmatrix} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} 1 \\ 3 \end{bmatrix} = \begin{bmatrix} 1 + 6 \\ 3 \end{bmatrix} = \begin{bmatrix} 7 \\ 3 \end{bmatrix}
+\]
+
+\textit{Explanation}: x-coordinate shifts by $k \times y = 2 \times 3 = 6$ units.
+
+\textbf{A18.}
+\[
+\mathbf{Wx} = \begin{bmatrix} 0.5 & -0.3 \\ 0.2 & 0.8 \end{bmatrix} \begin{bmatrix} 1 \\ 1 \end{bmatrix} = \begin{bmatrix} 0.5 - 0.3 \\ 0.2 + 0.8 \end{bmatrix} = \begin{bmatrix} 0.2 \\ 1.0 \end{bmatrix}
+\]
+
+\textit{Interpretation}: In a neural network, this is the pre-activation output for input $\mathbf{x} = [1, 1]^T$.
+
+\textbf{A19.} Solve using Gaussian elimination:
+\[
+\begin{cases}
+x + 2y - z = 3 \\
+2x + y + z = 1 \\
+x - y + z = -1
+\end{cases}
+\]
+
+\textit{Augmented matrix}:
+\[
+\left[\begin{array}{ccc|c}
+1 & 2 & -1 & 3 \\
+2 & 1 & 1 & 1 \\
+1 & -1 & 1 & -1
+\end{array}\right]
+\]
+
+\textit{Step 1}: $R_2 \leftarrow R_2 - 2R_1$, $R_3 \leftarrow R_3 - R_1$:
+\[
+\left[\begin{array}{ccc|c}
+1 & 2 & -1 & 3 \\
+0 & -3 & 3 & -5 \\
+0 & -3 & 2 & -4
+\end{array}\right]
+\]
+
+\textit{Step 2}: $R_3 \leftarrow R_3 - R_2$:
+\[
+\left[\begin{array}{ccc|c}
+1 & 2 & -1 & 3 \\
+0 & -3 & 3 & -5 \\
+0 & 0 & -1 & 1
+\end{array}\right]
+\]
+
+\textit{Back substitution}:
+\begin{align*}
+-z &= 1 \Rightarrow z = -1 \\
+-3y + 3(-1) &= -5 \Rightarrow y = \frac{2}{3} \\
+x + 2(\frac{2}{3}) - (-1) &= 3 \Rightarrow x = \frac{4}{3}
+\end{align*}
+
+\textbf{Solution}: $x = \frac{4}{3}, y = \frac{2}{3}, z = -1$
+
+\textbf{A20.} \textbf{Scaling by 2}:
+\[
+\mathbf{S} = \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix}
+\]
+
+\textbf{Rotation by 45°}:
+\[
+\mathbf{R} = \begin{bmatrix} \cos 45° & -\sin 45° \\ \sin 45° & \cos 45° \end{bmatrix} = \begin{bmatrix} \frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \end{bmatrix}
+\]
+
+\textbf{Composition} $\mathbf{RS}$ (scale then rotate):
+\[
+\mathbf{RS} = \begin{bmatrix} \frac{1}{\sqrt{2}} & -\frac{1}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \end{bmatrix} \begin{bmatrix} 2 & 0 \\ 0 & 2 \end{bmatrix} = \begin{bmatrix} \frac{2}{\sqrt{2}} & -\frac{2}{\sqrt{2}} \\ \frac{2}{\sqrt{2}} & \frac{2}{\sqrt{2}} \end{bmatrix} = \begin{bmatrix} \sqrt{2} & -\sqrt{2} \\ \sqrt{2} & \sqrt{2} \end{bmatrix}
+\]
+
+\subsection{Level 3 Solutions}
+
+\textbf{A21.} \textbf{Proof of associativity}:
+
+Let $T_1: \mathbb{R}^n \to \mathbb{R}^m$, $T_2: \mathbb{R}^m \to \mathbb{R}^p$, $T_3: \mathbb{R}^p \to \mathbb{R}^q$ with matrices $\mathbf{A}_1, \mathbf{A}_2, \mathbf{A}_3$.
+
+\textit{Left side}: $(T_3 \circ T_2) \circ T_1$
+\begin{align*}
+[(T_3 \circ T_2) \circ T_1](\mathbf{x}) &= (T_3 \circ T_2)(T_1(\mathbf{x})) \\
+&= T_3(T_2(T_1(\mathbf{x}))) \\
+&= \mathbf{A}_3(\mathbf{A}_2(\mathbf{A}_1\mathbf{x})) \\
+&= (\mathbf{A}_3\mathbf{A}_2)\mathbf{A}_1\mathbf{x}
+\end{align*}
+
+\textit{Right side}: $T_3 \circ (T_2 \circ T_1)$
+\begin{align*}
+[T_3 \circ (T_2 \circ T_1)](\mathbf{x}) &= T_3[(T_2 \circ T_1)(\mathbf{x})] \\
+&= T_3(T_2(T_1(\mathbf{x}))) \\
+&= \mathbf{A}_3(\mathbf{A}_2\mathbf{A}_1)\mathbf{x}
+\end{align*}
+
+By associativity of matrix multiplication: $(\mathbf{A}_3\mathbf{A}_2)\mathbf{A}_1 = \mathbf{A}_3(\mathbf{A}_2\mathbf{A}_1)$ $\checkmark$
+
+\textbf{A22.} Without activation functions, a multi-layer network becomes:
+\[
+\mathbf{y} = \mathbf{W}_L(\mathbf{W}_{L-1}(\cdots(\mathbf{W}_2(\mathbf{W}_1\mathbf{x}))\cdots))
+\]
+
+By associativity:
+\[
+\mathbf{y} = (\mathbf{W}_L\mathbf{W}_{L-1}\cdots\mathbf{W}_2\mathbf{W}_1)\mathbf{x} = \mathbf{W}_{\text{eff}}\mathbf{x}
+\]
+
+\textit{Explanation}: Multiple linear transformations compose to a single linear transformation $\mathbf{W}_{\text{eff}}$. This eliminates any benefit of depth—the network is equivalent to a single-layer linear model.
+
+\textit{Why activations matter}: Non-linear activations (ReLU, sigmoid, tanh) break this composition, allowing networks to learn complex, non-linear functions.
+
+\textbf{A23.} In backpropagation, gradients flow backward through composed transformations using the chain rule:
+
+\textit{Forward pass} (layer $i$):
+\[
+\mathbf{z}^{(i)} = \mathbf{W}^{(i)}\mathbf{a}^{(i-1)}, \quad \mathbf{a}^{(i)} = \sigma(\mathbf{z}^{(i)})
+\]
+
+\textit{Backward pass}:
+\[
+\frac{\partial L}{\partial \mathbf{W}^{(i)}} = \frac{\partial L}{\partial \mathbf{z}^{(i)}} \cdot (\mathbf{a}^{(i-1)})^T
+\]
+
+\[
+\frac{\partial L}{\partial \mathbf{a}^{(i-1)}} = (\mathbf{W}^{(i)})^T \cdot \frac{\partial L}{\partial \mathbf{z}^{(i)}}
+\]
+
+\textit{Key role of matrix multiplication}:
+\begin{itemize}
+\item Gradients are computed via matrix-vector products
+\item Weight gradients require outer products
+\item Gradient flows backward through transpose of weight matrices
+\item Composition of Jacobians follows matrix multiplication rules
+\end{itemize}
+
+\textbf{A24.} \textbf{Computational complexity comparison}:
+
+\textbf{(a) Gaussian Elimination}:
+\begin{itemize}
+\item Time: $O(n^3)$ operations
+\item Space: $O(n^2)$ for augmented matrix
+\item \textit{Best for}: Single system, direct solution
+\end{itemize}
+
+\textbf{(b) Matrix Inverse}:
+\begin{itemize}
+\item Time: $O(n^3)$ to compute $\mathbf{A}^{-1}$, then $O(n^2)$ for $\mathbf{A}^{-1}\mathbf{b}$
+\item Space: $O(n^2)$ to store $\mathbf{A}^{-1}$
+\item \textit{Best for}: Multiple systems with same $\mathbf{A}$, different $\mathbf{b}$
+\item \textit{Drawback}: Numerically unstable, rarely used in practice
+\end{itemize}
+
+\textbf{(c) LU Decomposition}:
+\begin{itemize}
+\item Time: $O(n^3)$ for decomposition, $O(n^2)$ per solve
+\item Space: $O(n^2)$ for $\mathbf{L}$ and $\mathbf{U}$
+\item \textit{Best for}: Multiple systems with same $\mathbf{A}$, reusable decomposition
+\item \textit{Advantage}: More numerically stable than inverse
+\end{itemize}
+
+\textit{Summary table}:
+\begin{center}
+\begin{tabular}{lccc}
+\hline
+Method & Initial Cost & Per Solve & Multiple $\mathbf{b}$ \\
+\hline
+Gaussian & $O(n^3)$ & — & $O(n^3)$ each \\
+Inverse & $O(n^3)$ & $O(n^2)$ & Efficient \\
+LU & $O(n^3)$ & $O(n^2)$ & Efficient + Stable \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{A25.} \textbf{Feature transformation strategy for linear separability}:
+
+\textit{Problem}: Given data that's not linearly separable in original space, design transformation.
+
+\textit{Strategy}:
+\begin{enumerate}
+\item \textbf{Analyze data distribution}: Identify non-linear patterns
+\item \textbf{Design transformation matrix $\mathbf{W}$}:
+\[
+\mathbf{z} = \mathbf{W}\mathbf{x}
+\]
+where $\mathbf{W}$ creates features that capture non-linear relationships
+
+\item \textbf{Common transformations}:
+\begin{itemize}
+\item Rotation to align with principal axes: PCA
+\item Projection onto discriminative directions: LDA
+\item Polynomial features via basis expansion
+\end{itemize}
+
+\item \textbf{Example - XOR problem}:
+
+Original features: $\mathbf{x} = [x_1, x_2]^T$
+
+Transformation:
+\[
+\mathbf{W} = \begin{bmatrix}
+1 & 1 \\
+1 & -1
+\end{bmatrix}
+\]
+
+New features:
+\[
+\mathbf{z} = \begin{bmatrix}
+x_1 + x_2 \\
+x_1 - x_2
+\end{bmatrix}
+\]
+
+This makes XOR linearly separable!
+
+\item \textbf{Verification with data}:
+
+\begin{center}
+\begin{tabular}{ccc|cc|c}
+$x_1$ & $x_2$ & Label & $z_1$ & $z_2$ & Separable? \\
+\hline
+0 & 0 & 0 & 0 & 0 & \\
+0 & 1 & 1 & 1 & -1 & Yes \\
+1 & 0 & 1 & 1 & 1 & (by $z_1$) \\
+1 & 1 & 0 & 2 & 0 & \\
+\end{tabular}
+\end{center}
+\end{enumerate}
+
+\textbf{A26.} \textbf{3D transformations in data augmentation}:
+
+\textit{Applications}:
+\begin{enumerate}
+\item \textbf{Rotation augmentation} (simulate different viewpoints):
+\[
+\mathbf{R}_y(\theta) = \begin{bmatrix}
+\cos\theta & 0 & \sin\theta \\
+0 & 1 & 0 \\
+-\sin\theta & 0 & \cos\theta
+\end{bmatrix}
+\]
+
+Example: Rotate 3D point cloud of an object by 30°:
+\[
+\mathbf{R}_y(30°) = \begin{bmatrix}
+0.866 & 0 & 0.5 \\
+0 & 1 & 0 \\
+-0.5 & 0 & 0.866
+\end{bmatrix}
+\]
+
+\item \textbf{Scaling augmentation} (simulate different sizes):
+\[
+\mathbf{S} = \begin{bmatrix}
+s_x & 0 & 0 \\
+0 & s_y & 0 \\
+0 & 0 & s_z
+\end{bmatrix}
+\]
+
+Example: Scale by 1.2 uniformly:
+\[
+\mathbf{S} = \begin{bmatrix}
+1.2 & 0 & 0 \\
+0 & 1.2 & 0 \\
+0 & 0 & 1.2
+\end{bmatrix}
+\]
+
+\item \textbf{Combined transformation}:
+\[
+\mathbf{T}_{\text{aug}} = \mathbf{S} \cdot \mathbf{R}_y(30°) \cdot \mathbf{R}_x(15°)
+\]
+
+This creates diverse training samples from a single 3D object!
+\end{enumerate}
+
+\textit{Benefits}:
+\begin{itemize}
+\item Increases dataset size artificially
+\item Improves model robustness
+\item Simulates real-world variations
+\end{itemize}
+
+\textbf{A27.} \textbf{Determinant under composition}:
+
+\textit{Theorem}: $\det(\mathbf{AB}) = \det(\mathbf{A}) \cdot \det(\mathbf{B})$
+
+\textit{Proof}:
+
+The determinant represents the scaling factor of volumes. When applying transformations $\mathbf{A}$ and $\mathbf{B}$ in sequence:
+\begin{itemize}
+\item $\mathbf{B}$ scales volume by factor $\det(\mathbf{B})$
+\item $\mathbf{A}$ further scales by factor $\det(\mathbf{A})$
+\item Total scaling: $\det(\mathbf{A}) \cdot \det(\mathbf{B})$
+\end{itemize}
+
+\textit{Algebraic proof sketch}:
+
+Using properties of determinants and the definition of matrix multiplication, one can show:
+\[
+\det(\mathbf{AB}) = \sum_{\sigma} \text{sgn}(\sigma) \prod_{i} (\mathbf{AB})_{i,\sigma(i)}
+\]
+
+Through careful manipulation of permutations and products, this equals:
+\[
+\left(\sum_{\tau} \text{sgn}(\tau) \prod_{i} a_{i,\tau(i)}\right) \cdot \left(\sum_{\rho} \text{sgn}(\rho) \prod_{j} b_{j,\rho(j)}\right) = \det(\mathbf{A}) \cdot \det(\mathbf{B})
+\]
+
+\textit{Example}:
+\[
+\mathbf{A} = \begin{bmatrix} 2 & 0 \\ 0 & 3 \end{bmatrix}, \quad \mathbf{B} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \end{bmatrix}
+\]
+
+\[
+\det(\mathbf{A}) = 6, \quad \det(\mathbf{B}) = 1
+\]
+
+\[
+\mathbf{AB} = \begin{bmatrix} 2 & 4 \\ 0 & 3 \end{bmatrix}, \quad \det(\mathbf{AB}) = 6 = 6 \cdot 1 \checkmark
+\]
+
+\textbf{A28.} \textbf{Proof of distributivity}:
+
+\textit{To prove}: $\mathbf{A}(\mathbf{B} + \mathbf{C}) = \mathbf{AB} + \mathbf{AC}$
+
+\textit{Proof}:
+
+Let $\mathbf{A} = [a_{ij}]$, $\mathbf{B} = [b_{jk}]$, $\mathbf{C} = [c_{jk}]$
+
+Element $(i,k)$ of left side:
+\begin{align*}
+[\mathbf{A}(\mathbf{B} + \mathbf{C})]_{ik} &= \sum_{j} a_{ij}(b_{jk} + c_{jk}) \\
+&= \sum_{j} (a_{ij}b_{jk} + a_{ij}c_{jk}) \\
+&= \sum_{j} a_{ij}b_{jk} + \sum_{j} a_{ij}c_{jk}
+\end{align*}
+
+Element $(i,k)$ of right side:
+\begin{align*}
+[\mathbf{AB} + \mathbf{AC}]_{ik} &= [\mathbf{AB}]_{ik} + [\mathbf{AC}]_{ik} \\
+&= \sum_{j} a_{ij}b_{jk} + \sum_{j} a_{ij}c_{jk}
+\end{align*}
+
+Since all elements are equal: $\mathbf{A}(\mathbf{B} + \mathbf{C}) = \mathbf{AB} + \mathbf{AC}$ $\checkmark$
+
+\textbf{A29.} \textbf{Eigenvalues and iterative methods}:
+
+For iterative methods (Jacobi, Gauss-Seidel, etc.) solving $\mathbf{Ax} = \mathbf{b}$, convergence depends on the eigenvalues of the iteration matrix.
+
+\textit{General form}:
+\[
+\mathbf{x}^{(k+1)} = \mathbf{Gx}^{(k)} + \mathbf{c}
+\]
+
+\textit{Convergence theorem}: The method converges if and only if the spectral radius $\rho(\mathbf{G}) < 1$, where:
+\[
+\rho(\mathbf{G}) = \max_i |\lambda_i|
+\]
+
+\textit{Interpretation}:
+\begin{itemize}
+\item If all $|\lambda_i| < 1$: Errors decay exponentially → convergence
+\item If any $|\lambda_i| \geq 1$: Errors grow or persist → divergence
+\item Smaller $\rho(\mathbf{G})$: Faster convergence
+\end{itemize}
+
+\textit{Example - Jacobi method}:
+
+For $\mathbf{A} = \mathbf{D} + \mathbf{L} + \mathbf{U}$:
+\[
+\mathbf{G}_{\text{Jacobi}} = -\mathbf{D}^{-1}(\mathbf{L} + \mathbf{U})
+\]
+
+Convergence guaranteed if $\mathbf{A}$ is diagonally dominant.
+
+\textbf{A30.} \textbf{Determining system types}:
+
+\textit{Definitions}:
+\begin{itemize}
+\item \textbf{Exactly determined}: $m = n$ (same number of equations and unknowns)
+\item \textbf{Over-determined}: $m > n$ (more equations than unknowns)
+\item \textbf{Under-determined}: $m < n$ (fewer equations than unknowns)
+\end{itemize}
+
+\textit{Determination criteria}:
+
+For system $\mathbf{Ax} = \mathbf{b}$ where $\mathbf{A} \in \mathbb{R}^{m \times n}$:
+
+\begin{center}
+\begin{tabular}{lll}
+\hline
+Type & Condition & Solution \\
+\hline
+Exactly determined & $m = n, \text{rank}(\mathbf{A}) = n$ & Unique solution \\
+Over-determined & $m > n$ & No exact solution (use least squares) \\
+Under-determined & $m < n$ & Infinitely many solutions \\
+\hline
+\end{tabular}
+\end{center}
+
+\textit{ML implications}:
+
+\begin{enumerate}
+\item \textbf{Over-determined} ($m > n$): 
+\begin{itemize}
+\item Common in ML: more data points than features
+\item Use least squares: minimize $\|\mathbf{Ax} - \mathbf{b}\|^2$
+\item Example: Linear regression with 1000 samples, 10 features
+\end{itemize}
+
+\item \textbf{Under-determined} ($m < n$):
+\begin{itemize}
+\item More features than data points
+\item Infinite solutions → need regularization
+\item Example: 10 samples, 100 features (overfitting risk)
+\item Use Ridge/Lasso to select unique solution
+\end{itemize}
+
+\item \textbf{Exactly determined}:
+\begin{itemize}
+\item Rare in practice
+\item Unique solution if $\mathbf{A}$ is invertible
+\item Can still overfit if not representative
+\end{itemize}
+\end{enumerate}
+
+\subsection{Multiple Choice Solutions}
+
+\textbf{A31.} \textbf{(b) $\mathbf{A}$ is invertible}
+
+\textit{Explanation}: For unique solution to exist, $\mathbf{A}$ must be square ($m = n$) AND have full rank (invertible). Then $\mathbf{x} = \mathbf{A}^{-1}\mathbf{b}$ is the unique solution.
+
+\textbf{A32.} \textbf{(b) The network reduces to a single linear transformation}
+
+\textit{Explanation}: Without non-linear activations, $\mathbf{y} = \mathbf{W}_L \cdots \mathbf{W}_1\mathbf{x} = \mathbf{W}_{\text{eff}}\mathbf{x}$, collapsing to a single linear layer. This eliminates any advantage of depth.
+
+\textbf{A33.} \textbf{(b) rank($\mathbf{A}$) + nullity($\mathbf{A}$) = number of columns}
+
+\textit{Explanation}: For $\mathbf{A} \in \mathbb{R}^{m \times n}$: 
+\[
+\text{rank}(\mathbf{A}) + \dim(\ker(\mathbf{A})) = n
+\]
+
+This fundamental theorem relates the dimension of the image and kernel.
+
+\textbf{A34.} \textbf{(c) Angles}
+
+\textit{Explanation}: Linear transformations preserve:
+\begin{itemize}
+\item Lines → lines
+\item Parallel lines → parallel lines  
+\item Ratios along lines
+\end{itemize}
+
+But generally do NOT preserve:
+\begin{itemize}
+\item Angles (except for rotations/reflections)
+\item Distances (except for isometries)
+\end{itemize}
+
+Example: Shear transformation distorts angles but preserves parallelism.
+
+\textbf{A35.} \textbf{(a) $O(mnp)$}
+
+\textit{Explanation}: Computing $\mathbf{C} = \mathbf{AB}$ where $\mathbf{A} \in \mathbb{R}^{m \times n}$, $\mathbf{B} \in \mathbb{R}^{n \times p}$:
+\begin{itemize}
+\item $\mathbf{C}$ has $m \times p$ elements
+\item Each element requires $n$ multiplications
+\item Total: $mnp$ operations
+\end{itemize}
+
+\newpage
+
+\section{Practice Problems}
+
+\subsection{Computational Problems}
+
+\begin{enumerate}
+\item \textbf{Calculate}: Solve the system
+\[
+\begin{cases}
+3x - y + 2z = 12 \\
+x + 2y - z = -3 \\
+2x + y + 3z = 8
+\end{cases}
+\]
+
+\item \textbf{If} $\mathbf{A} = \begin{bmatrix} 1 & 3 & 2 \\ 0 & 1 & 4 \end{bmatrix}$, find the LU decomposition.
+
+\item \textbf{Project} vector $\mathbf{v} = [2, 3, 1]^T$ onto plane spanned by $\mathbf{u}_1 = [1, 0, 0]^T$ and $\mathbf{u}_2 = [0, 1, 0]^T$.
+
+\item \textbf{Calculate} composition of:
+\begin{itemize}
+\item Rotation 60° about z-axis
+\item Scaling by $(2, 2, 0.5)$  
+\item Reflection across xy-plane
+\end{itemize}
+
+\item \textbf{Apply} Gaussian elimination to:
+\[
+\begin{bmatrix}
+2 & 1 & -1 \\
+-1 & 3 & 2 \\
+1 & 1 & 1
+\end{bmatrix}
+\begin{bmatrix}
+x \\ y \\ z
+\end{bmatrix}
+= \begin{bmatrix}
+4 \\ 5 \\ 6
+\end{bmatrix}
+\]
+\end{enumerate}
+
+\subsection{Conceptual Problems}
+
+\begin{enumerate}[resume]
+\item \textbf{Why can't} we add a vector to a scalar in the equation $\mathbf{Ax} + c = \mathbf{b}$ without broadcasting?
+
+\item \textbf{How does} composition of transformations relate to function composition in calculus?
+
+\item \textbf{Explain} why the order of transformations matters geometrically.
+
+\item \textbf{Why does} backpropagation use transpose of weight matrices?
+
+\item \textbf{How do} linear transformations in neural networks create feature hierarchies?
+\end{enumerate}
+
+\subsection{Application Problems}
+
+\begin{enumerate}[resume]
+\item \textbf{Design} a 3-layer neural network for XOR problem. Specify weight matrices and show forward pass.
+
+\item \textbf{Implement} least squares solution for linear regression with 5 data points.
+
+\item \textbf{Create} a data augmentation pipeline using 3D transformations for point clouds.
+
+\item \textbf{Calculate} gradient update for 2-layer network with specific inputs and targets.
+
+\item \textbf{Derive} the normal equations for ridge regression starting from the regularized loss function.
+\end{enumerate}
+
+\end{document}

@@ -1,0 +1,2076 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable,skins}
+\usepackage{mathtools}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\geometry{margin=1in}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Matrix Operations in ML \& DL}
+\lhead{Detailed Notes}
+\cfoot{\thepage}
+
+\title{\textbf{Linear Transformations and Vector Operations \\ for Machine Learning and Deep Learning}}
+\author{Akshay Redekar}
+\date{\today}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{property}{Property}[section]
+
+\definecolor{highlight}{RGB}{255,255,200}
+
+% Add page border using tikz
+\AddToHook{shipout/background}{%
+    \begin{tikzpicture}[remember picture, overlay]
+        \draw[line width=0.5pt]
+            ($(current page.north west) + (0.2in,-0.2in)$)
+            rectangle
+            ($(current page.south east) + (-0.2in,0.2in)$);
+    \end{tikzpicture}
+}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Linear Transformation of Non-square Matrix}
+
+\subsection{Introduction and Motivation}
+
+In machine learning and deep learning, we frequently encounter non-square matrices because the number of features doesn't usually match the number of data points. Understanding how these matrices transform vectors is fundamental to many ML algorithms.
+
+\begin{definition}[Non-square Matrix]
+A non-square matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ where $m \neq n$ represents a linear transformation that maps vectors from $\mathbb{R}^n$ to $\mathbb{R}^m$:
+\begin{equation}
+\mathbf{A}: \mathbb{R}^n \to \mathbb{R}^m
+\end{equation}
+
+\begin{itemize}
+    \item If $m > n$: The transformation maps from lower to higher dimension (expansion)
+    \item If $m < n$: The transformation maps from higher to lower dimension (reduction)
+\end{itemize}
+\end{definition}
+
+\begin{tcolorbox}[enhanced,breakable,colback=blue!5!white,colframe=blue!75!black,title=Why Non-square Matrices in ML/DL?]
+\textbf{Common Scenarios:}
+\begin{enumerate}
+    \item \textbf{Dataset Matrix:} $\mathbf{X} \in \mathbb{R}^{n \times d}$ where $n$ samples $\neq$ $d$ features
+    \item \textbf{Neural Network Layers:} Input dimension often differs from output dimension
+    \item \textbf{Dimensionality Reduction:} PCA, autoencoders map from high to low dimensions
+    \item \textbf{Feature Extraction:} Convolutional layers change spatial dimensions
+    \item \textbf{Embedding Layers:} Map discrete tokens to continuous vectors (different dimensions)
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Mathematical Properties}
+
+\begin{theorem}[Properties of Non-square Linear Transformations]
+For matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m \neq n$:
+
+\begin{enumerate}
+    \item \textbf{Linearity:} $\mathbf{A}(c_1\mathbf{x}_1 + c_2\mathbf{x}_2) = c_1\mathbf{A}\mathbf{x}_1 + c_2\mathbf{A}\mathbf{x}_2$
+    
+    \item \textbf{Rank:} $\text{rank}(\mathbf{A}) \leq \min(m, n)$
+    
+    \item \textbf{Not Invertible:} Cannot have a true inverse since $m \neq n$, but may have:
+    \begin{itemize}
+        \item Left inverse if $m > n$ and full column rank
+        \item Right inverse if $m < n$ and full row rank
+        \item Pseudo-inverse in general case
+    \end{itemize}
+    
+    \item \textbf{Null Space:} If $m < n$, the null space is non-trivial: $\dim(\mathcal{N}(\mathbf{A})) = n - \text{rank}(\mathbf{A}) > 0$
+\end{enumerate}
+\end{theorem}
+
+\subsection{Types of Non-square Transformations}
+
+\subsubsection{Expansion: From Lower to Higher Dimension}
+
+\begin{example}[Dimension Expansion $\mathbb{R}^2 \to \mathbb{R}^3$]
+Consider transformation matrix:
+\begin{equation}
+\mathbf{A} = \begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+1 & 1
+\end{bmatrix} \in \mathbb{R}^{3 \times 2}
+\end{equation}
+
+\textbf{Step 1: Apply to input vector}
+\begin{equation}
+\mathbf{x} = \begin{bmatrix} 2 \\ 3 \end{bmatrix} \in \mathbb{R}^2
+\end{equation}
+
+\textbf{Step 2: Compute transformation}
+\begin{align}
+\mathbf{y} = \mathbf{A}\mathbf{x} &= \begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+1 & 1
+\end{bmatrix} \begin{bmatrix} 2 \\ 3 \end{bmatrix} \\
+&= \begin{bmatrix}
+1(2) + 0(3) \\
+0(2) + 1(3) \\
+1(2) + 1(3)
+\end{bmatrix} = \begin{bmatrix} 2 \\ 3 \\ 5 \end{bmatrix} \in \mathbb{R}^3
+\end{align}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item First component: keeps $x_1$
+    \item Second component: keeps $x_2$
+    \item Third component: sum $x_1 + x_2$
+\end{itemize}
+
+\textbf{Geometric view:} The 2D vector is embedded into 3D space along a plane.
+
+\textbf{Range:} All outputs lie in a 2D plane within $\mathbb{R}^3$:
+\begin{equation}
+\mathcal{C}(\mathbf{A}) = \text{span}\left\{\begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+\end{example}
+
+\subsubsection{Reduction: From Higher to Lower Dimension}
+
+\begin{example}[Dimension Reduction $\mathbb{R}^3 \to \mathbb{R}^2$]
+Consider transformation matrix:
+\begin{equation}
+\mathbf{A} = \begin{bmatrix}
+1 & 0 & 1 \\
+0 & 1 & 1
+\end{bmatrix} \in \mathbb{R}^{2 \times 3}
+\end{equation}
+
+\textbf{Step 1: Apply to input vector}
+\begin{equation}
+\mathbf{x} = \begin{bmatrix} 2 \\ 3 \\ 1 \end{bmatrix} \in \mathbb{R}^3
+\end{equation}
+
+\textbf{Step 2: Compute transformation}
+\begin{align}
+\mathbf{y} = \mathbf{A}\mathbf{x} &= \begin{bmatrix}
+1 & 0 & 1 \\
+0 & 1 & 1
+\end{bmatrix} \begin{bmatrix} 2 \\ 3 \\ 1 \end{bmatrix} \\
+&= \begin{bmatrix}
+1(2) + 0(3) + 1(1) \\
+0(2) + 1(3) + 1(1)
+\end{bmatrix} = \begin{bmatrix} 3 \\ 4 \end{bmatrix} \in \mathbb{R}^2
+\end{align}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item First component: $x_1 + x_3$
+    \item Second component: $x_2 + x_3$
+    \item Information from 3D is projected to 2D
+\end{itemize}
+
+\textbf{Null Space:} Find vectors mapped to zero.
+
+Solve $\mathbf{A}\mathbf{x} = \mathbf{0}$:
+\begin{equation}
+\begin{bmatrix}
+1 & 0 & 1 \\
+0 & 1 & 1
+\end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \\ x_3 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}
+\end{equation}
+
+From equations:
+\begin{align}
+x_1 + x_3 &= 0 \implies x_1 = -x_3 \\
+x_2 + x_3 &= 0 \implies x_2 = -x_3
+\end{align}
+
+Let $x_3 = t$:
+\begin{equation}
+\mathbf{x} = t\begin{bmatrix} -1 \\ -1 \\ 1 \end{bmatrix}
+\end{equation}
+
+\textbf{Null space basis:}
+\begin{equation}
+\mathcal{N}(\mathbf{A}) = \text{span}\left\{\begin{bmatrix} -1 \\ -1 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Dimension analysis:}
+\begin{itemize}
+    \item $\text{rank}(\mathbf{A}) = 2$
+    \item $\dim(\mathcal{N}(\mathbf{A})) = 3 - 2 = 1$ ✓
+\end{itemize}
+
+This shows information loss: any vector along the null space direction is mapped to zero.
+\end{example}
+
+\subsection{Left and Right Inverses}
+
+\begin{definition}[Left Inverse]
+For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m > n$ and full column rank, the left inverse is:
+\begin{equation}
+\mathbf{A}_L^{-1} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T
+\end{equation}
+
+Property: $\mathbf{A}_L^{-1}\mathbf{A} = \mathbf{I}_n$ (but $\mathbf{A}\mathbf{A}_L^{-1} \neq \mathbf{I}_m$)
+\end{definition}
+
+\begin{definition}[Right Inverse]
+For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m < n$ and full row rank, the right inverse is:
+\begin{equation}
+\mathbf{A}_R^{-1} = \mathbf{A}^T(\mathbf{A}\mathbf{A}^T)^{-1}
+\end{equation}
+
+Property: $\mathbf{A}\mathbf{A}_R^{-1} = \mathbf{I}_m$ (but $\mathbf{A}_R^{-1}\mathbf{A} \neq \mathbf{I}_n$)
+\end{definition}
+
+\begin{example}[Computing Left Inverse]
+For:
+\begin{equation}
+\mathbf{A} = \begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+1 & 1
+\end{bmatrix} \in \mathbb{R}^{3 \times 2}
+\end{equation}
+
+\textbf{Step 1: Compute $\mathbf{A}^T\mathbf{A}$}
+\begin{equation}
+\mathbf{A}^T\mathbf{A} = \begin{bmatrix}
+1 & 0 & 1 \\
+0 & 1 & 1
+\end{bmatrix} \begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+1 & 1
+\end{bmatrix} = \begin{bmatrix}
+2 & 1 \\
+1 & 2
+\end{bmatrix}
+\end{equation}
+
+\textbf{Step 2: Invert $\mathbf{A}^T\mathbf{A}$}
+\begin{equation}
+\det(\mathbf{A}^T\mathbf{A}) = 4 - 1 = 3
+\end{equation}
+\begin{equation}
+(\mathbf{A}^T\mathbf{A})^{-1} = \frac{1}{3}\begin{bmatrix}
+2 & -1 \\
+-1 & 2
+\end{bmatrix}
+\end{equation}
+
+\textbf{Step 3: Compute left inverse}
+\begin{align}
+\mathbf{A}_L^{-1} &= (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T \\
+&= \frac{1}{3}\begin{bmatrix}
+2 & -1 \\
+-1 & 2
+\end{bmatrix} \begin{bmatrix}
+1 & 0 & 1 \\
+0 & 1 & 1
+\end{bmatrix} \\
+&= \frac{1}{3}\begin{bmatrix}
+2 & -1 & 1 \\
+-1 & 2 & 1
+\end{bmatrix}
+\end{equation}
+
+\textbf{Verification:}
+\begin{align}
+\mathbf{A}_L^{-1}\mathbf{A} &= \frac{1}{3}\begin{bmatrix}
+2 & -1 & 1 \\
+-1 & 2 & 1
+\end{bmatrix} \begin{bmatrix}
+1 & 0 \\
+0 & 1 \\
+1 & 1
+\end{bmatrix} \\
+&= \frac{1}{3}\begin{bmatrix}
+3 & 0 \\
+0 & 3
+\end{bmatrix} = \begin{bmatrix}
+1 & 0 \\
+0 & 1
+\end{bmatrix} = \mathbf{I}_2 \checkmark
+\end{align}
+\end{example}
+
+\subsection{Applications in Machine Learning}
+
+\begin{tcolorbox}[enhanced,breakable,colback=green!5!white,colframe=green!75!black,title=ML/DL Applications of Non-square Transformations]
+
+\textbf{1. Dimensionality Reduction (PCA):}
+
+Transform high-dimensional data to lower dimensions:
+\begin{equation}
+\mathbf{Z} = \mathbf{X}\mathbf{W} \quad \text{where } \mathbf{W} \in \mathbb{R}^{d \times k}, k < d
+\end{equation}
+
+Example: Project 1000-dimensional text features to 50 dimensions.
+
+\textbf{2. Neural Network Layers:}
+
+Each layer performs non-square transformation:
+\begin{equation}
+\mathbf{h}^{(l)} = \sigma(\mathbf{W}^{(l)}\mathbf{h}^{(l-1)} + \mathbf{b}^{(l)})
+\end{equation}
+
+where $\mathbf{W}^{(l)} \in \mathbb{R}^{n_l \times n_{l-1}}$ (often $n_l \neq n_{l-1}$)
+
+\textbf{3. Feature Engineering:}
+
+Create new features through linear combinations:
+\begin{equation}
+\mathbf{X}_{new} = \mathbf{X}_{old}\mathbf{T} \quad \text{where } \mathbf{T} \in \mathbb{R}^{d_{old} \times d_{new}}
+\end{equation}
+
+\textbf{4. Autoencoders:}
+
+\begin{itemize}
+    \item Encoder: $\mathbf{z} = f(\mathbf{W}_e\mathbf{x})$ where $\mathbf{W}_e \in \mathbb{R}^{k \times d}$, $k < d$
+    \item Decoder: $\hat{\mathbf{x}} = g(\mathbf{W}_d\mathbf{z})$ where $\mathbf{W}_d \in \mathbb{R}^{d \times k}$
+\end{itemize}
+
+\textbf{5. Word Embeddings (NLP):}
+
+Map vocabulary to dense vectors:
+\begin{equation}
+\mathbf{E} \in \mathbb{R}^{V \times d} \quad \text{where } V \text{ is vocab size, } d \text{ is embedding dim}
+\end{equation}
+
+Typically $V \gg d$ (e.g., 50000 → 300)
+
+\textbf{6. Convolutional Layers:}
+
+Flatten spatial dimensions while increasing channels:
+\begin{equation}
+\text{Input: } 32 \times 32 \times 3 \to \text{Output: } 16 \times 16 \times 64
+\end{equation}
+\end{tcolorbox}
+
+\begin{example}[Complete ML Example: PCA Dimensionality Reduction]
+Dataset with 4 samples, 3 features:
+\begin{equation}
+\mathbf{X} = \begin{bmatrix}
+1 & 2 & 3 \\
+2 & 3 & 5 \\
+3 & 5 & 7 \\
+4 & 6 & 9
+\end{bmatrix} \in \mathbb{R}^{4 \times 3}
+\end{equation}
+
+\textbf{Goal:} Reduce from 3 to 2 dimensions.
+
+\textbf{Step 1: Center the data}
+\begin{equation}
+\boldsymbol{\mu} = \begin{bmatrix} 2.5 \\ 4 \\ 6 \end{bmatrix}
+\end{equation}
+\begin{equation}
+\mathbf{X}_{centered} = \begin{bmatrix}
+-1.5 & -2 & -3 \\
+-0.5 & -1 & -1 \\
+0.5 & 1 & 1 \\
+1.5 & 2 & 3
+\end{bmatrix}
+\end{equation}
+
+\textbf{Step 2: Compute covariance matrix}
+\begin{equation}
+\mathbf{C} = \frac{1}{3}\mathbf{X}_{centered}^T\mathbf{X}_{centered} = \begin{bmatrix}
+1.667 & 2.167 & 3.167 \\
+2.167 & 2.917 & 4.250 \\
+3.167 & 4.250 & 6.667
+\end{bmatrix}
+\end{equation}
+
+\textbf{Step 3: Eigendecomposition}
+
+Eigenvalues: $\lambda_1 = 11.01$, $\lambda_2 = 0.24$, $\lambda_3 \approx 0$
+
+Top 2 eigenvectors (principal components):
+\begin{equation}
+\mathbf{W} = \begin{bmatrix}
+0.425 & -0.808 \\
+0.566 & -0.118 \\
+0.706 & 0.578
+\end{bmatrix} \in \mathbb{R}^{3 \times 2}
+\end{equation}
+
+\textbf{Step 4: Project data (non-square transformation)}
+\begin{align}
+\mathbf{Z} &= \mathbf{X}_{centered}\mathbf{W} \\
+&= \begin{bmatrix}
+-1.5 & -2 & -3 \\
+-0.5 & -1 & -1 \\
+0.5 & 1 & 1 \\
+1.5 & 2 & 3
+\end{bmatrix} \begin{bmatrix}
+0.425 & -0.808 \\
+0.566 & -0.118 \\
+0.706 & 0.578
+\end{bmatrix} \\
+&\approx \begin{bmatrix}
+-4.586 & 0.321 \\
+-1.531 & 0.069 \\
+1.531 & -0.069 \\
+4.586 & -0.321
+\end{bmatrix} \in \mathbb{R}^{4 \times 2}
+\end{align}
+
+\textbf{Result:} Data reduced from 3D to 2D!
+
+\textbf{Variance explained:}
+\begin{equation}
+\frac{\lambda_1 + \lambda_2}{\lambda_1 + \lambda_2 + \lambda_3} = \frac{11.25}{11.25} \approx 99.8\%
+\end{equation}
+
+\textbf{Reconstruction (approximate):}
+\begin{equation}
+\mathbf{X}_{reconstructed} = \mathbf{Z}\mathbf{W}^T + \boldsymbol{\mu}
+\end{equation}
+
+This demonstrates how non-square transformation $\mathbf{W} \in \mathbb{R}^{3 \times 2}$ reduces dimensionality while preserving 99.8\% of variance.
+\end{example}
+
+\begin{example}[Deep Learning Example: Neural Network Layer]
+Consider a fully connected layer:
+
+\textbf{Input:} $\mathbf{x} \in \mathbb{R}^{784}$ (flattened 28×28 image)
+\textbf{Output:} $\mathbf{h} \in \mathbb{R}^{128}$ (hidden layer)
+
+\textbf{Transformation:}
+\begin{equation}
+\mathbf{h} = \text{ReLU}(\mathbf{W}\mathbf{x} + \mathbf{b})
+\end{equation}
+
+where $\mathbf{W} \in \mathbb{R}^{128 \times 784}$ (non-square!)
+
+\textbf{Forward pass example (simplified):}
+
+Let's use smaller dimensions for illustration:
+\begin{equation}
+\mathbf{W} = \begin{bmatrix}
+0.1 & 0.2 & 0.3 & 0.1 \\
+0.2 & 0.1 & 0.2 & 0.3 \\
+0.3 & 0.3 & 0.1 & 0.2
+\end{bmatrix} \in \mathbb{R}^{3 \times 4}, \quad
+\mathbf{b} = \begin{bmatrix} 0.1 \\ 0.2 \\ 0.1 \end{bmatrix}
+\end{equation}
+
+\textbf{Input:}
+\begin{equation}
+\mathbf{x} = \begin{bmatrix} 1.0 \\ 2.0 \\ 1.5 \\ 0.5 \end{bmatrix} \in \mathbb{R}^4
+\end{equation}
+
+\textbf{Step 1: Linear transformation}
+\begin{align}
+\mathbf{z} = \mathbf{W}\mathbf{x} + \mathbf{b} &= \begin{bmatrix}
+0.1 & 0.2 & 0.3 & 0.1 \\
+0.2 & 0.1 & 0.2 & 0.3 \\
+0.3 & 0.3 & 0.1 & 0.2
+\end{bmatrix} \begin{bmatrix} 1.0 \\ 2.0 \\ 1.5 \\ 0.5 \end{bmatrix} + \begin{bmatrix} 0.1 \\ 0.2 \\ 0.1 \end{bmatrix} \\
+&= \begin{bmatrix}
+0.1 + 0.4 + 0.45 + 0.05 \\
+0.2 + 0.2 + 0.3 + 0.15 \\
+0.3 + 0.6 + 0.15 + 0.1
+\end{bmatrix} + \begin{bmatrix} 0.1 \\ 0.2 \\ 0.1 \end{bmatrix} \\
+&= \begin{bmatrix} 1.0 \\ 0.85 \\ 1.15 \end{bmatrix} + \begin{bmatrix} 0.1 \\ 0.2 \\ 0.1 \end{bmatrix} = \begin{bmatrix} 1.1 \\ 1.05 \\ 1.25 \end{bmatrix}
+\end{align}
+
+\textbf{Step 2: Apply ReLU activation}
+\begin{equation}
+\mathbf{h} = \text{ReLU}(\mathbf{z}) = \max(0, \mathbf{z}) = \begin{bmatrix} 1.1 \\ 1.05 \\ 1.25 \end{bmatrix}
+\end{equation}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Non-square matrix $\mathbf{W} \in \mathbb{R}^{3 \times 4}$ reduces dimension from 4 to 3
+    \item Each row of $\mathbf{W}$ computes a weighted sum of inputs
+    \item Bias adds learnable offset
+    \item ReLU introduces non-linearity
+\end{itemize}
+
+\textbf{Training:} Weight matrix $\mathbf{W}$ is learned via backpropagation to minimize loss.
+\end{example}
+
+\newpage
+\section{Dot Product}
+
+\subsection{Definition and Mathematical Foundation}
+
+\begin{definition}[Dot Product (Inner Product)]
+The dot product of two vectors $\mathbf{a}, \mathbf{b} \in \mathbb{R}^n$ is a scalar defined as:
+\begin{equation}
+\mathbf{a} \cdot \mathbf{b} = \mathbf{a}^T\mathbf{b} = \sum_{i=1}^{n} a_i b_i = a_1b_1 + a_2b_2 + \cdots + a_nb_n
+\end{equation}
+
+\textbf{Notation:} Also written as $\langle \mathbf{a}, \mathbf{b} \rangle$ or $(\mathbf{a}, \mathbf{b})$
+
+\textbf{Result:} A single real number (scalar)
+\end{definition}
+
+\begin{theorem}[Properties of Dot Product]
+For vectors $\mathbf{a}, \mathbf{b}, \mathbf{c} \in \mathbb{R}^n$ and scalar $k \in \mathbb{R}$:
+
+\begin{enumerate}
+    \item \textbf{Commutative:} $\mathbf{a} \cdot \mathbf{b} = \mathbf{b} \cdot \mathbf{a}$
+    
+    \item \textbf{Distributive:} $\mathbf{a} \cdot (\mathbf{b} + \mathbf{c}) = \mathbf{a} \cdot \mathbf{b} + \mathbf{a} \cdot \mathbf{c}$
+    
+    \item \textbf{Scalar multiplication:} $(k\mathbf{a}) \cdot \mathbf{b} = k(\mathbf{a} \cdot \mathbf{b}) = \mathbf{a} \cdot (k\mathbf{b})$
+    
+    \item \textbf{Positive definite:} $\mathbf{a} \cdot \mathbf{a} \geq 0$, with equality iff $\mathbf{a} = \mathbf{0}$
+    
+    \item \textbf{Cauchy-Schwarz inequality:} $|\mathbf{a} \cdot \mathbf{b}| \leq \|\mathbf{a}\| \|\mathbf{b}\|$
+\end{enumerate}
+\end{theorem}
+
+\subsection{Geometric Interpretation}
+
+\begin{theorem}[Geometric Formula]
+The dot product can be expressed using vector magnitudes and the angle between them:
+\begin{equation}
+\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\| \cos \theta
+\end{equation}
+
+where $\theta$ is the angle between vectors $\mathbf{a}$ and $\mathbf{b}$.
+
+\textbf{Consequences:}
+\begin{itemize}
+    \item $\theta = 0°$: $\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\|$ (parallel, same direction)
+    \item $\theta = 90°$: $\mathbf{a} \cdot \mathbf{b} = 0$ (perpendicular/orthogonal)
+    \item $\theta = 180°$: $\mathbf{a} \cdot \mathbf{b} = -\|\mathbf{a}\| \|\mathbf{b}\|$ (parallel, opposite direction)
+\end{itemize}
+\end{theorem}
+
+\begin{definition}[Vector Magnitude using Dot Product]
+The magnitude (or norm) of a vector can be computed using dot product:
+\begin{equation}
+\|\mathbf{a}\| = \sqrt{\mathbf{a} \cdot \mathbf{a}} = \sqrt{\sum_{i=1}^{n} a_i^2}
+\end{equation}
+
+This is also called the Euclidean norm or L2 norm.
+\end{definition}
+
+\begin{definition}[Angle Between Vectors]
+The angle between two non-zero vectors can be found by rearranging the geometric formula:
+\begin{equation}
+\cos \theta = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \|\mathbf{b}\|} \implies \theta = \arccos\left(\frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \|\mathbf{b}\|}\right)
+\end{equation}
+\end{definition}
+
+\subsection{Computational Examples}
+
+\begin{example}[Basic Dot Product Computation]
+Compute the dot product of:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 3 \\ 4 \\ 5 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 2 \\ -1 \\ 3 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 1: Apply formula}
+\begin{align}
+\mathbf{a} \cdot \mathbf{b} &= \sum_{i=1}^{3} a_i b_i \\
+&= (3)(2) + (4)(-1) + (5)(3) \\
+&= 6 - 4 + 15 \\
+&= 17
+\end{align}
+
+\textbf{Step 2: Matrix notation verification}
+\begin{equation}
+\mathbf{a}^T\mathbf{b} = \begin{bmatrix} 3 & 4 & 5 \end{bmatrix} \begin{bmatrix} 2 \\ -1 \\ 3 \end{bmatrix} = 17 \checkmark
+\end{equation}
+
+\textbf{Result:} The dot product is 17 (a positive scalar).
+\end{example}
+
+\begin{example}[Computing Angle Between Vectors]
+Find the angle between:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 1 \\ 1 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 1: Compute dot product}
+\begin{equation}
+\mathbf{a} \cdot \mathbf{b} = (1)(1) + (0)(1) = 1
+\end{equation}
+
+\textbf{Step 2: Compute magnitudes}
+\begin{align}
+\|\mathbf{a}\| &= \sqrt{1^2 + 0^2} = 1 \\
+\|\mathbf{b}\| &= \sqrt{1^2 + 1^2} = \sqrt{2}
+\end{align}
+
+\textbf{Step 3: Apply angle formula}
+\begin{equation}
+\cos \theta = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \|\mathbf{b}\|} = \frac{1}{1 \cdot \sqrt{2}} = \frac{1}{\sqrt{2}} = \frac{\sqrt{2}}{2}
+\end{equation}
+
+\textbf{Step 4: Find angle}
+\begin{equation}
+\theta = \arccos\left(\frac{\sqrt{2}}{2}\right) = 45° = \frac{\pi}{4} \text{ radians}
+\end{equation}
+
+\textbf{Interpretation:} The vectors form a 45° angle, which makes geometric sense: $\mathbf{a}$ points along x-axis, $\mathbf{b}$ points diagonally.
+\end{example}
+
+\begin{example}[Testing Orthogonality]
+Check if these vectors are orthogonal:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 3 \\ -2 \\ 1 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 2 \\ 3 \\ 0 \end{bmatrix}
+\end{equation}
+
+\textbf{Computation:}
+\begin{equation}
+\mathbf{a} \cdot \mathbf{b} = (3)(2) + (-2)(3) + (1)(0) = 6 - 6 + 0 = 0
+\end{equation}
+
+\textbf{Conclusion:} Since $\mathbf{a} \cdot \mathbf{b} = 0$, the vectors are orthogonal (perpendicular).
+
+This means $\cos \theta = 0 \implies \theta = 90°$.
+\end{example}
+
+\begin{example}[Projection of Vector onto Another]
+Project vector $\mathbf{b}$ onto vector $\mathbf{a}$:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 3 \\ 4 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 2 \\ 1 \end{bmatrix}
+\end{equation}
+
+The projection formula is:
+\begin{equation}
+\text{proj}_{\mathbf{a}}\mathbf{b} = \frac{\mathbf{a} \cdot \mathbf{b}}{\mathbf{a} \cdot \mathbf{a}} \mathbf{a}
+\end{equation}
+
+\textbf{Step 1: Compute $\mathbf{a} \cdot \mathbf{b}$}
+\begin{equation}
+\mathbf{a} \cdot \mathbf{b} = (3)(2) + (4)(1) = 6 + 4 = 10
+\end{equation}
+
+\textbf{Step 2: Compute $\mathbf{a} \cdot \mathbf{a}$}
+\begin{equation}
+\mathbf{a} \cdot \mathbf{a} = 3^2 + 4^2 = 9 + 16 = 25
+\end{equation}
+
+\textbf{Step 3: Calculate projection}
+\begin{equation}
+\text{proj}_{\mathbf{a}}\mathbf{b} = \frac{10}{25} \begin{bmatrix} 3 \\ 4 \end{bmatrix} = \frac{2}{5} \begin{bmatrix} 3 \\ 4 \end{bmatrix} = \begin{bmatrix} 1.2 \\ 1.6 \end{bmatrix}
+\end{equation}
+
+\textbf{Interpretation:} The projection is the component of $\mathbf{b}$ along the direction of $\mathbf{a}$.
+
+\textbf{Verification - projection is parallel to $\mathbf{a}$:}
+\begin{equation}
+\begin{bmatrix} 1.2 \\ 1.6 \end{bmatrix} = 0.4 \begin{bmatrix} 3 \\ 4 \end{bmatrix} \checkmark
+\end{equation}
+\end{example}
+
+\subsection{Applications in Machine Learning and Deep Learning}
+
+\begin{tcolorbox}[enhanced,breakable,colback=red!5!white,colframe=red!75!black,title=Critical ML/DL Applications of Dot Product]
+
+\textbf{1. Similarity Measures:}
+
+Cosine similarity between vectors:
+\begin{equation}
+\text{similarity}(\mathbf{a}, \mathbf{b}) = \frac{\mathbf{a} \cdot \mathbf{b}}{\|\mathbf{a}\| \|\mathbf{b}\|} = \cos \theta
+\end{equation}
+
+Range: [-1, 1] where 1 = identical direction, 0 = orthogonal, -1 = opposite
+
+\textbf{Applications:}
+\begin{itemize}
+    \item Document similarity in NLP
+    \item Image similarity in computer vision
+    \item Recommendation systems
+    \item Clustering algorithms
+\end{itemize}
+
+\textbf{2. Neural Network Layers:}
+
+Every neuron computes a weighted sum (dot product):
+\begin{equation}
+z = \mathbf{w}^T\mathbf{x} + b = \sum_{i=1}^{n} w_i x_i + b
+\end{equation}
+
+Then applies activation: $a = \sigma(z)$
+
+\textbf{3. Attention Mechanisms (Transformers):}
+
+Attention scores are computed using dot products:
+\begin{equation}
+\text{score}(\mathbf{q}, \mathbf{k}) = \frac{\mathbf{q} \cdot \mathbf{k}}{\sqrt{d_k}}
+\end{equation}
+
+where $\mathbf{q}$ = query, $\mathbf{k}$ = key, $d_k$ = dimension
+
+\textbf{4. Linear Regression:}
+
+Prediction is a dot product:
+\begin{equation}
+\hat{y} = \mathbf{w}^T\mathbf{x} = w_1x_1 + w_2x_2 + \cdots + w_dx_d
+\end{equation}
+
+\textbf{5. Support Vector Machines (SVMs):}
+
+Decision boundary is based on dot product:
+\begin{equation}
+f(\mathbf{x}) = \text{sign}(\mathbf{w}^T\mathbf{x} + b)
+\end{equation}
+
+Kernel trick: $K(\mathbf{x}_i, \mathbf{x}_j) = \phi(\mathbf{x}_i) \cdot \phi(\mathbf{x}_j)$
+
+\textbf{6. Distance Metrics:}
+
+Euclidean distance uses dot product:
+\begin{equation}
+\|\mathbf{a} - \mathbf{b}\|^2 = (\mathbf{a} - \mathbf{b}) \cdot (\mathbf{a} - \mathbf{b}) = \mathbf{a} \cdot \mathbf{a} - 2\mathbf{a} \cdot \mathbf{b} + \mathbf{b} \cdot \mathbf{b}
+\end{equation}
+
+\textbf{7. Principal Component Analysis:}
+
+Projection onto principal components:
+\begin{equation}
+z_i = \mathbf{v}_i^T\mathbf{x} \quad \text{(dot product with eigenvector)}
+\end{equation}
+
+\textbf{8. Gradient Descent:}
+
+Gradient is computed using dot products in backpropagation:
+\begin{equation}
+\frac{\partial L}{\partial w_i} = \sum_{j} \frac{\partial L}{\partial z_j} \frac{\partial z_j}{\partial w_i} = \sum_{j} \delta_j x_i
+\end{equation}
+\end{tcolorbox}
+
+\begin{example}[ML Application: Cosine Similarity for Document Comparison]
+Two documents represented as TF-IDF vectors:
+\begin{align}
+\mathbf{d}_1 &= [0.5, 0.3, 0.0, 0.8, 0.0] \quad \text{(Document 1)} \\
+\mathbf{d}_2 &= [0.4, 0.2, 0.1, 0.7, 0.0] \quad \text{(Document 2)}
+\end{align}
+
+\textbf{Step 1: Compute dot product}
+\begin{align}
+\mathbf{d}_1 \cdot \mathbf{d}_2 &= (0.5)(0.4) + (0.3)(0.2) + (0.0)(0.1) + (0.8)(0.7) + (0.0)(0.0) \\
+&= 0.20 + 0.06 + 0 + 0.56 + 0 \\
+&= 0.82
+\end{align}
+
+\textbf{Step 2: Compute magnitudes}
+\begin{align}
+\|\mathbf{d}_1\| &= \sqrt{0.5^2 + 0.3^2 + 0^2 + 0.8^2 + 0^2} = \sqrt{0.98} \approx 0.990 \\
+\|\mathbf{d}_2\| &= \sqrt{0.4^2 + 0.2^2 + 0.1^2 + 0.7^2 + 0^2} = \sqrt{0.70} \approx 0.837
+\end{align}
+
+\textbf{Step 3: Compute cosine similarity}
+\begin{equation}
+\text{similarity} = \frac{\mathbf{d}_1 \cdot \mathbf{d}_2}{\|\mathbf{d}_1\| \|\mathbf{d}_2\|} = \frac{0.82}{0.990 \times 0.837} \approx \frac{0.82}{0.829} \approx 0.989
+\end{equation}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Similarity = 0.989 (very close to 1)
+    \item Documents are very similar in content
+    \item Would be good candidates for clustering together
+\end{itemize}
+
+\textbf{Decision threshold:} If similarity > 0.8, consider documents as duplicates or highly related.
+\end{example}
+
+\begin{example}[Deep Learning Application: Neuron Computation]
+A single neuron with 4 inputs:
+
+\textbf{Weights:} $\mathbf{w} = [0.5, -0.3, 0.8, 0.2]^T$
+\textbf{Bias:} $b = 0.1$
+\textbf{Input:} $\mathbf{x} = [1.0, 2.0, 0.5, 1.5]^T$
+
+\textbf{Step 1: Compute weighted sum (dot product)}
+\begin{align}
+z &= \mathbf{w}^T\mathbf{x} + b \\
+&= (0.5)(1.0) + (-0.3)(2.0) + (0.8)(0.5) + (0.2)(1.5) + 0.1 \\
+&= 0.5 - 0.6 + 0.4 + 0.3 + 0.1 \\
+&= 0.7
+\end{align}
+
+\textbf{Step 2: Apply activation function (sigmoid)}
+\begin{equation}
+a = \sigma(z) = \frac{1}{1 + e^{-z}} = \frac{1}{1 + e^{-0.7}} \approx \frac{1}{1.503} \approx 0.668
+\end{equation}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Neuron receives 4 inputs
+    \item Computes weighted sum via dot product
+    \item Adds bias term
+    \item Applies non-linear activation
+    \item Outputs 0.668 (activation level)
+\end{itemize}
+
+\textbf{In a neural network:}
+\begin{itemize}
+    \item This operation happens billions of times during training
+    \item Efficient dot product computation is critical for performance
+    \item GPUs excel at parallel dot product operations
+\end{itemize}
+\end{example}
+
+\begin{example}[Transformer Attention: Scaled Dot-Product Attention]
+Simplified attention mechanism:
+
+\textbf{Query:} $\mathbf{q} = [1.0, 0.5, 0.8]^T$
+\textbf{Keys:} 
+\begin{equation}
+\mathbf{K} = \begin{bmatrix}
+1.2 & 0.3 & 0.7 \\
+0.8 & 0.9 & 0.5 \\
+0.5 & 0.4 & 1.0
+\end{bmatrix}
+\end{equation}
+(Each row is a key vector)
+
+\textbf{Values:}
+\begin{equation}
+\mathbf{V} = \begin{bmatrix}
+2.0 & 1.5 \\
+1.8 & 1.2 \\
+1.6 & 2.0
+\end{bmatrix}
+\end{equation}
+
+\textbf{Step 1: Compute attention scores (dot products)}
+\begin{align}
+\text{score}_1 &= \mathbf{q} \cdot \mathbf{k}_1 = (1.0)(1.2) + (0.5)(0.3) + (0.8)(0.7) = 1.91 \\
+\text{score}_2 &= \mathbf{q} \cdot \mathbf{k}_2 = (1.0)(0.8) + (0.5)(0.9) + (0.8)(0.5) = 1.65 \\
+\text{score}_3 &= \mathbf{q} \cdot \mathbf{k}_3 = (1.0)(0.5) + (0.5)(0.4) + (0.8)(1.0) = 1.50
+\end{align}
+
+\textbf{Step 2: Scale by $\sqrt{d_k}$}
+\begin{equation}
+d_k = 3, \quad \sqrt{d_k} = \sqrt{3} \approx 1.732
+\end{equation}
+\begin{align}
+\text{scaled}_1 &= 1.91 / 1.732 \approx 1.103 \\
+\text{scaled}_2 &= 1.65 / 1.732 \approx 0.953 \\
+\text{scaled}_3 &= 1.50 / 1.732 \approx 0.866
+\end{align}
+
+\textbf{Step 3: Apply softmax}
+\begin{equation}
+e^{1.103} \approx 3.01, \quad e^{0.953} \approx 2.59, \quad e^{0.866} \approx 2.38
+\end{equation}
+\begin{equation}
+\text{sum} = 3.01 + 2.59 + 2.38 = 7.98
+\end{equation}
+\begin{align}
+\alpha_1 &= 3.01 / 7.98 \approx 0.377 \\
+\alpha_2 &= 2.59 / 7.98 \approx 0.325 \\
+\alpha_3 &= 2.38 / 7.98 \approx 0.298
+\end{align}
+
+\textbf{Step 4: Weighted sum of values}
+\begin{align}
+\text{output} &= \alpha_1\mathbf{v}_1 + \alpha_2\mathbf{v}_2 + \alpha_3\mathbf{v}_3 \\
+&= 0.377\begin{bmatrix} 2.0 \\ 1.5 \end{bmatrix} + 0.325\begin{bmatrix} 1.8 \\ 1.2 \end{bmatrix} + 0.298\begin{bmatrix} 1.6 \\ 2.0 \end{bmatrix} \\
+&= \begin{bmatrix} 0.754 \\ 0.566 \end{bmatrix} + \begin{bmatrix} 0.585 \\ 0.390 \end{bmatrix} + \begin{bmatrix} 0.477 \\ 0.596 \end{bmatrix} \\
+&= \begin{bmatrix} 1.816 \\ 1.552 \end{bmatrix}
+\end{align}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Query attends most to key 1 (highest score)
+    \item Attention weights sum to 1
+    \item Output is weighted combination of values
+    \item Dot products enable efficient similarity computation
+\end{itemize}
+\end{example}
+
+\newpage
+\section{Cross Product}
+
+\subsection{Definition and Mathematical Foundation}
+
+\begin{definition}[Cross Product (Vector Product)]
+The cross product of two vectors $\mathbf{a}, \mathbf{b} \in \mathbb{R}^3$ is a vector $\mathbf{c} \in \mathbb{R}^3$ defined as:
+\begin{equation}
+\mathbf{a} \times \mathbf{b} = \begin{bmatrix}
+a_2b_3 - a_3b_2 \\
+a_3b_1 - a_1b_3 \\
+a_1b_2 - a_2b_1
+\end{bmatrix}
+\end{equation}
+
+\textbf{Key characteristic:} The result is a vector (unlike dot product which gives a scalar).
+
+\textbf{Restriction:} Only defined for 3-dimensional vectors (or can be extended to 7D, but not commonly used).
+\end{definition}
+
+\begin{definition}[Determinant Notation]
+The cross product can be expressed as a determinant:
+\begin{equation}
+\mathbf{a} \times \mathbf{b} = \det\begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+a_1 & a_2 & a_3 \\
+b_1 & b_2 & b_3
+\end{bmatrix}
+\end{equation}
+
+where $\mathbf{i}, \mathbf{j}, \mathbf{k}$ are the standard unit vectors.
+
+\textbf{Expansion:}
+\begin{equation}
+\mathbf{a} \times \mathbf{b} = (a_2b_3 - a_3b_2)\mathbf{i} - (a_1b_3 - a_3b_1)\mathbf{j} + (a_1b_2 - a_2b_1)\mathbf{k}
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Properties of Cross Product]
+For vectors $\mathbf{a}, \mathbf{b}, \mathbf{c} \in \mathbb{R}^3$ and scalar $k \in \mathbb{R}$:
+
+\begin{enumerate}
+    \item \textbf{Anti-commutative:} $\mathbf{a} \times \mathbf{b} = -(\mathbf{b} \times \mathbf{a})$
+    
+    \item \textbf{Not associative:} $(\mathbf{a} \times \mathbf{b}) \times \mathbf{c} \neq \mathbf{a} \times (\mathbf{b} \times \mathbf{c})$ (in general)
+    
+    \item \textbf{Distributive:} $\mathbf{a} \times (\mathbf{b} + \mathbf{c}) = \mathbf{a} \times \mathbf{b} + \mathbf{a} \times \mathbf{c}$
+    
+    \item \textbf{Scalar multiplication:} $(k\mathbf{a}) \times \mathbf{b} = k(\mathbf{a} \times \mathbf{b}) = \mathbf{a} \times (k\mathbf{b})$
+    
+    \item \textbf{Orthogonality:} $\mathbf{a} \times \mathbf{b}$ is perpendicular to both $\mathbf{a}$ and $\mathbf{b}$:
+    \begin{equation}
+    (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{a} = 0, \quad (\mathbf{a} \times \mathbf{b}) \cdot \mathbf{b} = 0
+    \end{equation}
+    
+    \item \textbf{Zero product:} $\mathbf{a} \times \mathbf{b} = \mathbf{0} \iff \mathbf{a}$ and $\mathbf{b}$ are parallel
+    
+    \item \textbf{Self cross product:} $\mathbf{a} \times \mathbf{a} = \mathbf{0}$
+\end{enumerate}
+\end{theorem}
+
+\subsection{Geometric Interpretation}
+
+\begin{theorem}[Geometric Formula]
+The magnitude of the cross product is:
+\begin{equation}
+\|\mathbf{a} \times \mathbf{b}\| = \|\mathbf{a}\| \|\mathbf{b}\| \sin \theta
+\end{equation}
+
+where $\theta$ is the angle between $\mathbf{a}$ and $\mathbf{b}$.
+
+\textbf{Geometric meaning:} $\|\mathbf{a} \times \mathbf{b}\|$ equals the area of the parallelogram formed by $\mathbf{a}$ and $\mathbf{b}$.
+\end{theorem}
+
+\begin{theorem}[Right-Hand Rule]
+The direction of $\mathbf{a} \times \mathbf{b}$ is determined by the right-hand rule:
+\begin{itemize}
+    \item Point fingers in direction of $\mathbf{a}$
+    \item Curl fingers toward $\mathbf{b}$
+    \item Thumb points in direction of $\mathbf{a} \times \mathbf{b}$
+\end{itemize}
+
+The resulting vector is perpendicular to the plane containing $\mathbf{a}$ and $\mathbf{b}$.
+\end{theorem}
+
+\subsection{Computational Examples}
+
+\begin{example}[Basic Cross Product Computation]
+Compute the cross product:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 2 \\ 3 \\ 4 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 5 \\ 6 \\ 7 \end{bmatrix}
+\end{equation}
+
+\textbf{Method 1: Component formula}
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix}
+a_2b_3 - a_3b_2 \\
+a_3b_1 - a_1b_3 \\
+a_1b_2 - a_2b_1
+\end{bmatrix} \\
+&= \begin{bmatrix}
+(3)(7) - (4)(6) \\
+(4)(5) - (2)(7) \\
+(2)(6) - (3)(5)
+\end{bmatrix} \\
+&= \begin{bmatrix}
+21 - 24 \\
+20 - 14 \\
+12 - 15
+\end{bmatrix} = \begin{bmatrix}
+-3 \\
+6 \\
+-3
+\end{bmatrix}
+\end{align}
+
+\textbf{Method 2: Determinant expansion}
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \det\begin{bmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+2 & 3 & 4 \\
+5 & 6 & 7
+\end{bmatrix} \\
+&= \mathbf{i}\det\begin{bmatrix} 3 & 4 \\ 6 & 7 \end{bmatrix} - \mathbf{j}\det\begin{bmatrix} 2 & 4 \\ 5 & 7 \end{bmatrix} + \mathbf{k}\det\begin{bmatrix} 2 & 3 \\ 5 & 6 \end{bmatrix} \\
+&= \mathbf{i}(21-24) - \mathbf{j}(14-20) + \mathbf{k}(12-15) \\
+&= -3\mathbf{i} + 6\mathbf{j} - 3\mathbf{k} = \begin{bmatrix} -3 \\ 6 \\ -3 \end{bmatrix}
+\end{align}
+
+\textbf{Verification of orthogonality:}
+\begin{align}
+(\mathbf{a} \times \mathbf{b}) \cdot \mathbf{a} &= (-3)(2) + (6)(3) + (-3)(4) = -6 + 18 - 12 = 0 \checkmark \\
+(\mathbf{a} \times \mathbf{b}) \cdot \mathbf{b} &= (-3)(5) + (6)(6) + (-3)(7) = -15 + 36 - 21 = 0 \checkmark
+\end{align}
+
+The cross product is indeed perpendicular to both original vectors!
+\end{example}
+
+\begin{example}[Computing Area of Parallelogram]
+Find the area of the parallelogram formed by:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 3 \\ 0 \\ 0 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 0 \\ 4 \\ 0 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 1: Compute cross product}
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix}
+(0)(0) - (0)(4) \\
+(0)(0) - (3)(0) \\
+(3)(4) - (0)(0)
+\end{bmatrix} = \begin{bmatrix}
+0 \\
+0 \\
+12
+\end{bmatrix}
+\end{align}
+
+\textbf{Step 2: Compute magnitude}
+\begin{equation}
+\|\mathbf{a} \times \mathbf{b}\| = \sqrt{0^2 + 0^2 + 12^2} = 12
+\end{equation}
+
+\textbf{Area:} The area of the parallelogram is 12 square units.
+
+\textbf{Verification using base × height:}
+\begin{itemize}
+    \item Base = $\|\mathbf{a}\| = 3$
+    \item Height = $\|\mathbf{b}\| = 4$
+    \item Since vectors are perpendicular ($\theta = 90°$): Area = $3 \times 4 = 12$ ✓
+\end{itemize}
+\end{example}
+
+\begin{example}[Testing Parallel Vectors]
+Check if vectors are parallel:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}
+\end{equation}
+
+\textbf{Observation:} $\mathbf{a} = 2\mathbf{b}$, so vectors are parallel.
+
+\textbf{Compute cross product:}
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix}
+(4)(3) - (6)(2) \\
+(6)(1) - (2)(3) \\
+(2)(2) - (4)(1)
+\end{bmatrix} \\
+&= \begin{bmatrix}
+12 - 12 \\
+6 - 6 \\
+4 - 4
+\end{bmatrix} = \begin{bmatrix}
+0 \\
+0 \\
+0
+\end{bmatrix}
+\end{align}
+
+\textbf{Conclusion:} Cross product is zero vector, confirming vectors are parallel.
+\end{example}
+
+\begin{example}[Standard Unit Vector Cross Products]
+\textbf{Standard basis vectors:}
+\begin{equation}
+\mathbf{i} = \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}, \quad
+\mathbf{j} = \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}, \quad
+\mathbf{k} = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+\end{equation}
+
+\textbf{Cyclic pattern (right-hand rule):}
+\begin{align}
+\mathbf{i} \times \mathbf{j} &= \mathbf{k} \\
+\mathbf{j} \times \mathbf{k} &= \mathbf{i} \\
+\mathbf{k} \times \mathbf{i} &= \mathbf{j}
+\end{align}
+
+\textbf{Anti-cyclic pattern:}
+\begin{align}
+\mathbf{j} \times \mathbf{i} &= -\mathbf{k} \\
+\mathbf{k} \times \mathbf{j} &= -\mathbf{i} \\
+\mathbf{i} \times \mathbf{k} &= -\mathbf{j}
+\end{align}
+
+\textbf{Self cross products:}
+\begin{equation}
+\mathbf{i} \times \mathbf{i} = \mathbf{j} \times \mathbf{j} = \mathbf{k} \times \mathbf{k} = \mathbf{0}
+\end{equation}
+
+\textbf{Verification - Example:} $\mathbf{i} \times \mathbf{j}$
+\begin{equation}
+\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix} \times \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix} = \begin{bmatrix}
+(0)(0) - (0)(1) \\
+(0)(0) - (1)(0) \\
+(1)(1) - (0)(0)
+\end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = \mathbf{k} \checkmark
+\end{equation}
+\end{example}
+
+\subsection{Applications in Machine Learning and Computer Vision}
+
+\begin{tcolorbox}[enhanced,breakable,colback=purple!5!white,colframe=purple!75!black,title=ML/DL Applications of Cross Product]
+
+\textbf{1. Computer Graphics and 3D Vision:}
+
+\textbf{Surface Normal Computation:}
+Given two edges of a triangle:
+\begin{equation}
+\mathbf{n} = \mathbf{e}_1 \times \mathbf{e}_2
+\end{equation}
+The cross product gives the normal vector perpendicular to the surface.
+
+\textbf{Applications:}
+\begin{itemize}
+    \item Lighting calculations (Phong shading)
+    \item Back-face culling in rendering
+    \item Surface reconstruction
+    \item 3D mesh processing
+\end{itemize}
+
+\textbf{2. Robotics and Pose Estimation:}
+
+Computing rotational velocities and angular momentum:
+\begin{equation}
+\boldsymbol{\omega} = \mathbf{r} \times \mathbf{v}
+\end{equation}
+
+Used in:
+\begin{itemize}
+    \item Robot kinematics
+    \item Camera pose estimation
+    \item SLAM (Simultaneous Localization and Mapping)
+\end{itemize}
+
+\textbf{3. Physics-Based Neural Networks:}
+
+Modeling physical constraints:
+\begin{itemize}
+    \item Torque calculations: $\boldsymbol{\tau} = \mathbf{r} \times \mathbf{F}$
+    \item Angular momentum conservation
+    \item Rigid body dynamics
+\end{itemize}
+
+\textbf{4. Point Cloud Processing:}
+
+Computing surface normals for 3D point clouds:
+\begin{equation}
+\mathbf{n}_p = (\mathbf{p}_2 - \mathbf{p}_1) \times (\mathbf{p}_3 - \mathbf{p}_1)
+\end{equation}
+
+Used in:
+\begin{itemize}
+    \item 3D object detection
+    \item Scene understanding
+    \item Autonomous driving
+\end{itemize}
+
+\textbf{5. Geometric Deep Learning:}
+
+\begin{itemize}
+    \item Graph neural networks with spatial features
+    \item Mesh convolutional networks
+    \item Point cloud networks (PointNet++)
+\end{itemize}
+
+\textbf{6. Camera Calibration:}
+
+Essential matrix and fundamental matrix computations involve cross products for epipolar geometry.
+
+\textbf{7. Volume Computation:}
+
+Scalar triple product (involves cross product):
+\begin{equation}
+V = |\mathbf{a} \cdot (\mathbf{b} \times \mathbf{c})|
+\end{equation}
+Volume of parallelepiped formed by three vectors.
+\end{tcolorbox}
+
+\begin{example}[Computer Vision: Computing Surface Normal]
+A triangular mesh face with vertices:
+\begin{align}
+\mathbf{p}_1 &= \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix} \\
+\mathbf{p}_2 &= \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix} \\
+\mathbf{p}_3 &= \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+\end{align}
+
+\textbf{Step 1: Compute edge vectors}
+\begin{align}
+\mathbf{e}_1 &= \mathbf{p}_2 - \mathbf{p}_1 = \begin{bmatrix} -1 \\ 1 \\ 0 \end{bmatrix} \\
+\mathbf{e}_2 &= \mathbf{p}_3 - \mathbf{p}_1 = \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix}
+\end{align}
+
+\textbf{Step 2: Compute cross product (normal vector)}
+\begin{align}
+\mathbf{n} &= \mathbf{e}_1 \times \mathbf{e}_2 \\
+&= \begin{bmatrix}
+(1)(1) - (0)(0) \\
+(0)(-1) - (-1)(1) \\
+(-1)(0) - (1)(-1)
+\end{bmatrix} \\
+&= \begin{bmatrix}
+1 \\
+1 \\
+1
+\end{bmatrix}
+\end{align}
+
+\textbf{Step 3: Normalize to unit normal}
+\begin{equation}
+\|\mathbf{n}\| = \sqrt{1^2 + 1^2 + 1^2} = \sqrt{3}
+\end{equation}
+\begin{equation}
+\hat{\mathbf{n}} = \frac{\mathbf{n}}{\|\mathbf{n}\|} = \frac{1}{\sqrt{3}}\begin{bmatrix} 1 \\ 1 \\ 1 \end{bmatrix} = \begin{bmatrix} 0.577 \\ 0.577 \\ 0.577 \end{bmatrix}
+\end{equation}
+
+\textbf{Application in lighting:}
+
+Lambertian shading intensity:
+\begin{equation}
+I = k_d (\hat{\mathbf{n}} \cdot \hat{\mathbf{l}})
+\end{equation}
+
+where $\hat{\mathbf{l}}$ is the light direction and $k_d$ is the diffuse coefficient.
+
+If light direction is $\hat{\mathbf{l}} = [0, 0, 1]^T$:
+\begin{equation}
+I = k_d (0.577 \times 0 + 0.577 \times 0 + 0.577 \times 1) = 0.577 k_d
+\end{equation}
+
+This determines how bright the surface appears based on its orientation to the light.
+\end{example}
+
+\begin{example}[Robotics: Computing Torque]
+A robot arm with:
+\begin{itemize}
+    \item Position vector from joint to force application: $\mathbf{r} = [0.3, 0.2, 0]^T$ meters
+    \item Applied force: $\mathbf{F} = [0, 0, -10]^T$ Newtons (downward gravity)
+\end{itemize}
+
+\textbf{Compute torque:}
+\begin{align}
+\boldsymbol{\tau} &= \mathbf{r} \times \mathbf{F} \\
+&= \begin{bmatrix} 0.3 \\ 0.2 \\ 0 \end{bmatrix} \times \begin{bmatrix} 0 \\ 0 \\ -10 \end{bmatrix} \\
+&= \begin{bmatrix}
+(0.2)(-10) - (0)(0) \\
+(0)(0) - (0.3)(-10) \\
+(0.3)(0) - (0.2)(0)
+\end{bmatrix} \\
+&= \begin{bmatrix}
+-2 \\
+3 \\
+0
+\end{bmatrix} \text{ N·m}
+\end{align}
+
+\textbf{Interpretation:}
+\begin{itemize}
+    \item Torque magnitude: $\|\boldsymbol{\tau}\| = \sqrt{4 + 9} = \sqrt{13} \approx 3.61$ N·m
+    \item Direction: perpendicular to both $\mathbf{r}$ and $\mathbf{F}$
+    \item This torque causes rotation about the joint
+    \item Robot controller must compensate to maintain position
+\end{itemize}
+
+\textbf{In ML for robotics:}
+\begin{itemize}
+    \item Neural networks learn to predict required torques
+    \item Physics-informed networks include cross product constraints
+    \item Reinforcement learning optimizes control policies
+\end{itemize}
+\end{example}
+
+\begin{example}[3D Computer Vision: Volume Computation]
+Compute volume of tetrahedron with vertices at origin and:
+\begin{equation}
+\mathbf{a} = \begin{bmatrix} 2 \\ 0 \\ 0 \end{bmatrix}, \quad
+\mathbf{b} = \begin{bmatrix} 0 \\ 3 \\ 0 \end{bmatrix}, \quad
+\mathbf{c} = \begin{bmatrix} 0 \\ 0 \\ 4 \end{bmatrix}
+\end{equation}
+
+\textbf{Formula:} Volume = $\frac{1}{6}|\mathbf{a} \cdot (\mathbf{b} \times \mathbf{c})|$
+
+\textbf{Step 1: Compute cross product}
+\begin{align}
+\mathbf{b} \times \mathbf{c} &= \begin{bmatrix}
+(3)(4) - (0)(0) \\
+(0)(0) - (0)(4) \\
+(0)(0) - (3)(0)
+\end{bmatrix} = \begin{bmatrix}
+12 \\
+0 \\
+0
+\end{bmatrix}
+\end{align}
+
+\textbf{Step 2: Compute scalar triple product}
+\begin{equation}
+\mathbf{a} \cdot (\mathbf{b} \times \mathbf{c}) = \begin{bmatrix} 2 \\ 0 \\ 0 \end{bmatrix} \cdot \begin{bmatrix} 12 \\ 0 \\ 0 \end{bmatrix} = 24
+\end{equation}
+
+\textbf{Step 3: Compute volume}
+\begin{equation}
+V = \frac{1}{6}|24| = 4 \text{ cubic units}
+\end{equation}
+
+\textbf{Verification:} 
+For a tetrahedron with perpendicular edges along axes:
+\begin{equation}
+V = \frac{1}{6} \times \text{base area} \times \text{height} = \frac{1}{6} \times (2 \times 3) \times 4 = 4 \checkmark
+\end{equation}
+
+\textbf{Application:}
+\begin{itemize}
+    \item Mesh volume computation in 3D reconstruction
+    \item Collision detection in physics simulations
+    \item Shape analysis in medical imaging
+\end{itemize}
+\end{example}
+
+\subsection{Cross Product vs Dot Product Summary}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|p{3cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{Property} & \textbf{Dot Product} & \textbf{Cross Product} \\
+\hline
+Result & Scalar & Vector \\
+\hline
+Dimension & Any dimension & Only 3D (primarily) \\
+\hline
+Formula & $\mathbf{a} \cdot \mathbf{b} = \sum a_i b_i$ & $\mathbf{a} \times \mathbf{b} = $ perpendicular vector \\
+\hline
+Geometric & $\|\mathbf{a}\|\|\mathbf{b}\|\cos\theta$ & $\|\mathbf{a}\|\|\mathbf{b}\|\sin\theta$ \\
+\hline
+Commutative? & Yes: $\mathbf{a} \cdot \mathbf{b} = \mathbf{b} \cdot \mathbf{a}$ & No: $\mathbf{a} \times \mathbf{b} = -\mathbf{b} \times \mathbf{a}$ \\
+\hline
+Measures & Projection, similarity & Area, perpendicularity \\
+\hline
+Zero when & Perpendicular ($\theta = 90°$) & Parallel ($\theta = 0°$ or $180°$) \\
+\hline
+ML Uses & Similarity, neurons, attention & Surface normals, 3D geometry \\
+\hline
+\end{tabular}
+\caption{Comparison of Dot Product and Cross Product}
+\end{table}
+
+\subsection{Why Cross Product is Less Common in ML}
+
+\begin{tcolorbox}[enhanced,breakable,colback=yellow!10!white,colframe=orange!75!black,title=Limitations of Cross Product in ML]
+
+\textbf{1. Dimension Restriction:}
+\begin{itemize}
+    \item Only defined for 3D vectors (primarily)
+    \item ML often works with high-dimensional data (100s to 1000s of dimensions)
+    \item Dot product generalizes to any dimension
+\end{itemize}
+
+\textbf{2. Computational Efficiency:}
+\begin{itemize}
+    \item Dot product: $O(n)$ operations, highly parallelizable
+    \item Cross product: More complex, produces vector output
+    \item Neural networks prefer scalar outputs from dot products
+\end{itemize}
+
+\textbf{3. Application Domains:}
+\begin{itemize}
+    \item Dot product: Similarity, projections, transformations (universal)
+    \item Cross product: Geometric operations, 3D spatial reasoning (specialized)
+\end{itemize}
+
+\textbf{4. Where Cross Product Appears:}
+\begin{itemize}
+    \item Computer graphics and rendering
+    \item 3D computer vision (surface normals, pose estimation)
+    \item Robotics (torque, angular momentum)
+    \item Physics-informed neural networks
+    \item Point cloud processing
+    \item Geometric deep learning on 3D data
+\end{itemize}
+\end{tcolorbox}
+
+\section{Conclusion}
+
+This document covered three essential topics for machine learning and deep learning:
+
+\subsection{Key Takeaways}
+
+\begin{enumerate}
+    \item \textbf{Linear Transformation of Non-square Matrices:}
+    \begin{itemize}
+        \item Common in ML due to dimension mismatches
+        \item Used in dimensionality reduction (PCA)
+        \item Neural network layers often have different input/output sizes
+        \item Understanding null space reveals information loss
+        \item Pseudo-inverse handles non-invertibility
+    \end{itemize}
+    
+    \item \textbf{Dot Product:}
+    \begin{itemize}
+        \item Fundamental operation in all ML/DL algorithms
+        \item Measures similarity and projection
+        \item Core of neural network computations
+        \item Used in attention mechanisms (Transformers)
+        \item Enables efficient parallel computation
+        \item Works in any dimension
+    \end{itemize}
+    
+    \item \textbf{Cross Product:}
+    \begin{itemize}
+        \item Specialized for 3D geometric operations
+        \item Essential in computer vision and graphics
+        \item Computes surface normals and areas
+        \item Used in robotics for torque calculations
+        \item Less common in general ML, but crucial for 3D applications
+        \item Produces vectors perpendicular to input vectors
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Practical Recommendations}
+
+\begin{tcolorbox}[enhanced,breakable,colback=green!5!white,colframe=green!75!black,title=Best Practices]
+
+\textbf{For Implementation:}
+\begin{itemize}
+    \item Use NumPy/PyTorch for efficient dot product: \texttt{np.dot()}, \texttt{@} operator
+    \item Leverage GPU acceleration for matrix operations
+    \item Use broadcasting to avoid explicit loops
+    \item For cross product: \texttt{np.cross()} in NumPy
+    \item Normalize vectors when computing similarity (cosine similarity)
+\end{itemize}
+
+\textbf{For ML Applications:}
+\begin{itemize}
+    \item Dot product: similarity search, neural networks, recommender systems
+    \item Cross product: 3D vision, surface reconstruction, robotics
+    \item Non-square transformations: dimensionality reduction, feature engineering
+    \item Always check dimensions before matrix operations
+    \item Use pseudo-inverse for non-square systems
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Further Study}
+
+To deepen understanding:
+\begin{itemize}
+    \item Study tensor operations for modern deep learning
+    \item Learn attention mechanisms in detail (Transformers)
+    \item Explore 3D deep learning (PointNet, Mesh R-CNN)
+    \item Understand matrix calculus for backpropagation
+    \item Practice implementing algorithms from scratch
+    \item Study geometric deep learning frameworks
+\end{itemize}
+
+\subsection{Connection to Previous Topics}
+
+These concepts build upon:
+\begin{itemize}
+    \item \textbf{Matrix inverse:} Pseudo-inverse for non-square matrices
+    \item \textbf{Rank:} Determines dimension of transformed space
+    \item \textbf{Null space:} Information lost in non-square transformations
+    \item \textbf{Column space:} Range of transformation
+    \item \textbf{Change of basis:} PCA as change to principal component basis
+\end{itemize}
+
+\newpage
+
+\section{Assessment Questions}
+
+\subsection{Level 1: Basic Understanding}
+
+\begin{enumerate}
+\item \textbf{What is a non-square matrix?} Provide two examples from machine learning.
+
+\item \textbf{Give the definition} of dot product and cross product. What is the key difference in their outputs?
+
+\item \textbf{What is the difference between} a left inverse and a right inverse? When does each exist?
+
+\item \textbf{Calculate}: Compute the dot product of $\mathbf{a} = \begin{bmatrix} 2 \\ 3 \\ 1 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 1 \\ -1 \\ 2 \end{bmatrix}$.
+
+\item \textbf{If} $\mathbf{A} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \\ 1 & 0 \end{bmatrix}$ and $\mathbf{x} = \begin{bmatrix} 2 \\ 3 \end{bmatrix}$, find $\mathbf{Ax}$.
+
+\item \textbf{True or False}: The dot product of two vectors is always a scalar.
+
+\item \textbf{Identify whether each operation} produces a scalar or vector:
+\begin{enumerate}[label=(\alph*)]
+\item Dot product: $\mathbf{a} \cdot \mathbf{b}$
+\item Cross product: $\mathbf{a} \times \mathbf{b}$
+\item Matrix-vector product: $\mathbf{A}\mathbf{x}$
+\end{enumerate}
+
+\item \textbf{Compute}: $\mathbf{a} \times \mathbf{b}$ where $\mathbf{a} = \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}$.
+
+\item \textbf{What are the two fundamental properties} that define a linear transformation?
+
+\item \textbf{Why is the cross product} only defined for 3D vectors (primarily)?
+\end{enumerate}
+
+\subsection{Level 2: Intermediate}
+
+\begin{enumerate}[resume]
+\item \textbf{What is the role of dot product} in neural network layers? Provide the formula.
+
+\item \textbf{Compute} the left inverse of $\mathbf{A} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix}$.
+
+\item \textbf{State the geometric formula} for dot product and explain its meaning.
+
+\item \textbf{Given} $\mathbf{a} = \begin{bmatrix} 3 \\ 4 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 2 \\ 1 \end{bmatrix}$, compute the projection of $\mathbf{b}$ onto $\mathbf{a}$.
+
+\item \textbf{What is the null space} of a non-square matrix? Give geometric interpretation.
+
+\item \textbf{Given transformation} matrix $\mathbf{A} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \\ 1 & 0 \end{bmatrix}$, find the dimension of its column space and null space.
+
+\item \textbf{Calculate}: Find the angle between $\mathbf{a} = \begin{bmatrix} 1 \\ 0 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 1 \\ 1 \end{bmatrix}$ using dot product.
+
+\item \textbf{If} $\mathbf{a} = \begin{bmatrix} 2 \\ 3 \\ 4 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 5 \\ 6 \\ 7 \end{bmatrix}$, compute $\mathbf{a} \times \mathbf{b}$.
+
+\item \textbf{Solve}: For $\mathbf{A} \in \mathbb{R}^{3 \times 2}$ with full column rank, find the left inverse formula.
+
+\item \textbf{Calculate} the area of parallelogram formed by $\mathbf{a} = \begin{bmatrix} 3 \\ 0 \\ 0 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 0 \\ 4 \\ 0 \end{bmatrix}$.
+\end{enumerate}
+
+\subsection{Level 3: Advanced}
+
+\begin{enumerate}[resume]
+\item \textbf{Prove} that the dot product is commutative: $\mathbf{a} \cdot \mathbf{b} = \mathbf{b} \cdot \mathbf{a}$.
+
+\item \textbf{Why does a non-square matrix} $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m > n$ have a left inverse but not a right inverse?
+
+\item \textbf{Explain the role of dot product} in attention mechanisms (Transformers). Provide the scaled dot-product attention formula.
+
+\item \textbf{Compare the computational complexity} of computing:
+\begin{enumerate}[label=(\alph*)]
+\item Dot product of two $n$-dimensional vectors
+\item Cross product of two 3D vectors
+\item Matrix-vector product $\mathbf{A}\mathbf{x}$ where $\mathbf{A} \in \mathbb{R}^{m \times n}$
+\end{enumerate}
+
+\item \textbf{Design a PCA transformation} using non-square matrix to reduce 1000-dimensional data to 50 dimensions. Specify the transformation matrix dimensions.
+
+\item \textbf{Explain how cross product} is used in computing surface normals for 3D computer vision. Provide the formula.
+
+\item \textbf{What happens to the rank} when you apply a non-square transformation $\mathbf{A} \in \mathbb{R}^{m \times n}$ where $m < n$? Prove your answer.
+
+\item \textbf{Prove} that the cross product is anti-commutative: $\mathbf{a} \times \mathbf{b} = -(\mathbf{b} \times \mathbf{a})$.
+
+\item \textbf{Explain the relationship between} null space dimension and information loss in dimensionality reduction.
+
+\item \textbf{How do you determine} if a non-square matrix has full column rank or full row rank? What are the implications for ML applications?
+\end{enumerate}
+
+\subsection{Multiple Choice Questions}
+
+\begin{enumerate}[resume]
+\item The dot product of two vectors $\mathbf{a}, \mathbf{b} \in \mathbb{R}^n$ is:
+\begin{enumerate}[label=(\alph*)]
+\item A vector in $\mathbb{R}^n$
+\item A scalar
+\item A matrix in $\mathbb{R}^{n \times n}$
+\item A tensor
+\end{enumerate}
+
+\item For a non-square matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m > n$ and full column rank:
+\begin{enumerate}[label=(\alph*)]
+\item Only right inverse exists
+\item Only left inverse exists
+\item Both inverses exist
+\item No inverse exists
+\end{enumerate}
+
+\item The cross product $\mathbf{a} \times \mathbf{b}$ is zero if and only if:
+\begin{enumerate}[label=(\alph*)]
+\item $\mathbf{a}$ and $\mathbf{b}$ are perpendicular
+\item $\mathbf{a}$ and $\mathbf{b}$ are parallel
+\item $\mathbf{a}$ or $\mathbf{b}$ is zero
+\item Both (b) and (c)
+\end{enumerate}
+
+\item In a neural network layer with input dimension 784 and output dimension 128, the weight matrix $\mathbf{W}$ has dimensions:
+\begin{enumerate}[label=(\alph*)]
+\item $784 \times 128$
+\item $128 \times 784$
+\item $784 \times 784$
+\item $128 \times 128$
+\end{enumerate}
+
+\item The computational complexity of dot product for two $n$-dimensional vectors is:
+\begin{enumerate}[label=(\alph*)]
+\item $O(n^2)$
+\item $O(n)$
+\item $O(1)$
+\item $O(\log n)$
+\end{enumerate}
+\end{enumerate}
+
+\subsection{Programming Exercises}
+
+\begin{enumerate}[label=\textbf{P\arabic*.}]
+\item Implement dot product computation in Python without using NumPy's built-in functions.
+
+\item Write a function to compute the left inverse of a non-square matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ where $m > n$.
+
+\item Create a function to compute cross product of two 3D vectors and verify orthogonality.
+
+\item Implement cosine similarity between two document vectors using dot product.
+
+\item Build a simple PCA dimensionality reduction function that uses non-square transformation matrix.
+\end{enumerate}
+
+\newpage
+
+\section{Solutions to Assessment Questions}
+
+\subsection{Level 1 Solutions}
+
+\textbf{A1.} A non-square matrix is a matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ where $m \neq n$. 
+
+\textit{ML Examples:}
+\begin{enumerate}
+\item \textit{Neural Network Layer}: Weight matrix $\mathbf{W} \in \mathbb{R}^{128 \times 784}$ maps 784-dimensional input to 128-dimensional output.
+\item \textit{PCA Transformation}: Projection matrix $\mathbf{W} \in \mathbb{R}^{50 \times 1000}$ reduces 1000-dimensional features to 50 dimensions.
+\end{enumerate}
+
+\textit{Explanation}: Non-square matrices are common in ML because input and output dimensions often differ.
+
+\textbf{A2.} \textbf{Dot Product}: $\mathbf{a} \cdot \mathbf{b} = \sum_{i=1}^{n} a_i b_i = \mathbf{a}^T\mathbf{b}$ (produces a scalar)
+
+\textbf{Cross Product}: $\mathbf{a} \times \mathbf{b}$ produces a vector perpendicular to both $\mathbf{a}$ and $\mathbf{b}$ (only for 3D vectors)
+
+\textit{Key difference}: Dot product gives a scalar; cross product gives a vector.
+
+\textbf{A3.} \textbf{Left Inverse}: For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m > n$ and full column rank, $\mathbf{A}_L^{-1} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T$ where $\mathbf{A}_L^{-1}\mathbf{A} = \mathbf{I}_n$.
+
+\textbf{Right Inverse}: For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m < n$ and full row rank, $\mathbf{A}_R^{-1} = \mathbf{A}^T(\mathbf{A}\mathbf{A}^T)^{-1}$ where $\mathbf{A}\mathbf{A}_R^{-1} = \mathbf{I}_m$.
+
+\textit{Explanation}: Left inverse exists when there are more rows than columns; right inverse exists when there are more columns than rows.
+
+\textbf{A4.}
+\begin{align}
+\mathbf{a} \cdot \mathbf{b} &= (2)(1) + (3)(-1) + (1)(2) \\
+&= 2 - 3 + 2 \\
+&= 1
+\end{align}
+
+\textbf{A5.}
+\begin{align}
+\mathbf{Ax} &= \begin{bmatrix} 1 & 2 \\ 0 & 1 \\ 1 & 0 \end{bmatrix} \begin{bmatrix} 2 \\ 3 \end{bmatrix} \\
+&= \begin{bmatrix} 1(2) + 2(3) \\ 0(2) + 1(3) \\ 1(2) + 0(3) \end{bmatrix} \\
+&= \begin{bmatrix} 8 \\ 3 \\ 2 \end{bmatrix}
+\end{align}
+
+\textbf{A6.} \textbf{True}. The dot product always produces a single scalar value.
+
+\textit{Explanation}: $\mathbf{a} \cdot \mathbf{b} = \sum_{i=1}^{n} a_i b_i$ is a sum of products, resulting in one number.
+
+\textbf{A7.}
+\begin{enumerate}[label=(\alph*)]
+\item Dot product: \textbf{Scalar}
+\item Cross product: \textbf{Vector}
+\item Matrix-vector product: \textbf{Vector}
+\end{enumerate}
+
+\textbf{A8.}
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix} \times \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix} \\
+&= \begin{bmatrix}
+(0)(0) - (0)(1) \\
+(0)(0) - (1)(0) \\
+(1)(1) - (0)(0)
+\end{bmatrix} \\
+&= \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = \mathbf{k}
+\end{align}
+
+\textit{Explanation}: This follows the right-hand rule: $\mathbf{i} \times \mathbf{j} = \mathbf{k}$.
+
+\textbf{A9.} The two fundamental properties are:
+\begin{enumerate}
+\item \textbf{Additivity}: $T(\mathbf{u} + \mathbf{v}) = T(\mathbf{u}) + T(\mathbf{v})$
+\item \textbf{Homogeneity}: $T(c\mathbf{u}) = cT(\mathbf{u})$ for any scalar $c$
+\end{enumerate}
+
+\textbf{A10.} The cross product is primarily defined for 3D vectors because:
+\begin{itemize}
+\item The formula requires exactly 3 components to compute the perpendicular vector
+\item The right-hand rule applies specifically to 3D space
+\item While it can be extended to 7D, it's not commonly used in higher dimensions
+\item Most geometric applications (surface normals, torque) are in 3D space
+\end{itemize}
+
+\subsection{Level 2 Solutions}
+
+\textbf{A11.} In neural network layers, dot product computes the weighted sum:
+\[
+z = \mathbf{w}^T\mathbf{x} + b = \sum_{i=1}^{n} w_i x_i + b
+\]
+
+\textit{Explanation}: Each neuron computes a dot product between input vector and weight vector, then adds bias and applies activation function.
+
+\textbf{A12.} For $\mathbf{A} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix}$:
+
+\textit{Step 1}: Compute $\mathbf{A}^T\mathbf{A}$
+\[
+\mathbf{A}^T\mathbf{A} = \begin{bmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{bmatrix} \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 1 & 1 \end{bmatrix} = \begin{bmatrix} 2 & 1 \\ 1 & 2 \end{bmatrix}
+\]
+
+\textit{Step 2}: Invert $\mathbf{A}^T\mathbf{A}$
+\[
+(\mathbf{A}^T\mathbf{A})^{-1} = \frac{1}{3}\begin{bmatrix} 2 & -1 \\ -1 & 2 \end{bmatrix}
+\]
+
+\textit{Step 3}: Compute left inverse
+\[
+\mathbf{A}_L^{-1} = \frac{1}{3}\begin{bmatrix} 2 & -1 \\ -1 & 2 \end{bmatrix} \begin{bmatrix} 1 & 0 & 1 \\ 0 & 1 & 1 \end{bmatrix} = \frac{1}{3}\begin{bmatrix} 2 & -1 & 1 \\ -1 & 2 & 1 \end{bmatrix}
+\]
+
+\textbf{A13.} \textbf{Geometric formula}: $\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\| \|\mathbf{b}\| \cos \theta$
+
+\textit{Meaning}: The dot product equals the product of vector magnitudes times the cosine of the angle between them. This relates algebraic computation to geometric relationships.
+
+\textbf{A14.} Projection formula: $\text{proj}_{\mathbf{a}}\mathbf{b} = \frac{\mathbf{a} \cdot \mathbf{b}}{\mathbf{a} \cdot \mathbf{a}} \mathbf{a}$
+
+\textit{Step 1}: $\mathbf{a} \cdot \mathbf{b} = (3)(2) + (4)(1) = 10$
+
+\textit{Step 2}: $\mathbf{a} \cdot \mathbf{a} = 3^2 + 4^2 = 25$
+
+\textit{Step 3}: $\text{proj}_{\mathbf{a}}\mathbf{b} = \frac{10}{25} \begin{bmatrix} 3 \\ 4 \end{bmatrix} = \begin{bmatrix} 1.2 \\ 1.6 \end{bmatrix}$
+
+\textbf{A15.} The \textbf{null space} of matrix $\mathbf{A}$ is:
+\[
+\mathcal{N}(\mathbf{A}) = \{\mathbf{x} : \mathbf{A}\mathbf{x} = \mathbf{0}\}
+\]
+
+\textit{Geometric interpretation}: All vectors that get mapped to zero by the transformation. For non-square matrices with $m < n$, the null space is non-trivial, meaning information is lost.
+
+\textit{Example}: In dimensionality reduction, vectors in the null space direction are collapsed to zero.
+
+\textbf{A16.} For $\mathbf{A} = \begin{bmatrix} 1 & 2 \\ 0 & 1 \\ 1 & 0 \end{bmatrix} \in \mathbb{R}^{3 \times 2}$:
+
+\begin{itemize}
+\item $\text{rank}(\mathbf{A}) = 2$ (columns are linearly independent)
+\item $\dim(\mathcal{C}(\mathbf{A})) = 2$ (column space dimension equals rank)
+\item $\dim(\mathcal{N}(\mathbf{A})) = 2 - 2 = 0$ (null space is trivial since $m > n$)
+\end{itemize}
+
+\textbf{A17.} Using dot product formula:
+\begin{align}
+\mathbf{a} \cdot \mathbf{b} &= (1)(1) + (0)(1) = 1 \\
+\|\mathbf{a}\| &= 1, \quad \|\mathbf{b}\| = \sqrt{2} \\
+\cos \theta &= \frac{1}{1 \cdot \sqrt{2}} = \frac{1}{\sqrt{2}} \\
+\theta &= \arccos\left(\frac{1}{\sqrt{2}}\right) = 45° = \frac{\pi}{4}
+\end{align}
+
+\textbf{A18.}
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix}
+(3)(7) - (4)(6) \\
+(4)(5) - (2)(7) \\
+(2)(6) - (3)(5)
+\end{bmatrix} \\
+&= \begin{bmatrix}
+21 - 24 \\
+20 - 14 \\
+12 - 15
+\end{bmatrix} = \begin{bmatrix} -3 \\ 6 \\ -3 \end{bmatrix}
+\end{align}
+
+\textbf{A19.} For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m > n$ and full column rank:
+
+\textbf{Left inverse formula}:
+\[
+\mathbf{A}_L^{-1} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T
+\]
+
+\textit{Verification}: $\mathbf{A}_L^{-1}\mathbf{A} = (\mathbf{A}^T\mathbf{A})^{-1}\mathbf{A}^T\mathbf{A} = \mathbf{I}_n$ $\checkmark$
+
+\textbf{A20.} Area of parallelogram = $\|\mathbf{a} \times \mathbf{b}\|$
+
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix}
+(0)(0) - (0)(4) \\
+(0)(0) - (3)(0) \\
+(3)(4) - (0)(0)
+\end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 12 \end{bmatrix} \\
+\|\mathbf{a} \times \mathbf{b}\| &= 12
+\end{align}
+
+\textit{Verification}: Since vectors are perpendicular, area = $3 \times 4 = 12$ $\checkmark$
+
+\subsection{Level 3 Solutions}
+
+\textbf{A21.} \textbf{Proof of commutativity}:
+
+Let $\mathbf{a} = [a_1, a_2, \ldots, a_n]^T$ and $\mathbf{b} = [b_1, b_2, \ldots, b_n]^T$.
+
+\begin{align}
+\mathbf{a} \cdot \mathbf{b} &= \sum_{i=1}^{n} a_i b_i \\
+&= \sum_{i=1}^{n} b_i a_i \quad \text{(multiplication is commutative)} \\
+&= \mathbf{b} \cdot \mathbf{a}
+\end{align}
+
+Therefore, $\mathbf{a} \cdot \mathbf{b} = \mathbf{b} \cdot \mathbf{a}$ $\checkmark$
+
+\textbf{A22.} For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m > n$:
+
+\begin{itemize}
+\item \textbf{Left inverse exists} if $\text{rank}(\mathbf{A}) = n$ (full column rank)
+\item \textbf{Right inverse cannot exist} because:
+  \begin{itemize}
+  \item Right inverse requires $\mathbf{A}\mathbf{A}_R^{-1} = \mathbf{I}_m$
+  \item But $\mathbf{A}$ has only $n$ columns, so $\mathbf{A}\mathbf{A}_R^{-1}$ has at most rank $n < m$
+  \item Cannot equal $\mathbf{I}_m$ which has rank $m$
+  \end{itemize}
+\end{itemize}
+
+\textit{Geometric interpretation}: With more rows than columns, the transformation maps to a lower-dimensional space, so we can recover the input (left inverse) but cannot create a full identity on the output space.
+
+\textbf{A23.} In attention mechanisms, dot product computes similarity scores:
+
+\textbf{Scaled Dot-Product Attention}:
+\[
+\text{Attention}(\mathbf{Q}, \mathbf{K}, \mathbf{V}) = \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}^T}{\sqrt{d_k}}\right)\mathbf{V}
+\]
+
+\textit{Key role}:
+\begin{itemize}
+\item $\mathbf{Q}\mathbf{K}^T$ computes dot products between queries and keys
+\item Higher dot product = higher similarity = more attention
+\item Scaling by $\sqrt{d_k}$ prevents extreme values
+\item Softmax converts scores to probability distribution
+\end{itemize}
+
+\textbf{A24.} \textbf{Computational complexity}:
+
+\textbf{(a) Dot product}: $O(n)$ operations (n multiplications + n-1 additions)
+
+\textbf{(b) Cross product}: $O(1)$ operations (fixed 9 operations for 3D vectors)
+
+\textbf{(c) Matrix-vector product}: $O(mn)$ operations (m dot products, each O(n))
+
+\textit{Summary}: Dot product is linear, cross product is constant (for 3D), matrix-vector product is quadratic in dimensions.
+
+\textbf{A25.} \textbf{PCA Transformation Design}:
+
+\textit{Transformation}: $\mathbf{Z} = \mathbf{X}\mathbf{W}$ where:
+\begin{itemize}
+\item $\mathbf{X} \in \mathbb{R}^{N \times 1000}$ (N samples, 1000 features)
+\item $\mathbf{W} \in \mathbb{R}^{1000 \times 50}$ (non-square transformation matrix)
+\item $\mathbf{Z} \in \mathbb{R}^{N \times 50}$ (reduced dimension)
+\end{itemize}
+
+\textit{Steps}:
+\begin{enumerate}
+\item Center data: $\mathbf{X}_{centered} = \mathbf{X} - \boldsymbol{\mu}$
+\item Compute covariance: $\mathbf{C} = \frac{1}{N-1}\mathbf{X}_{centered}^T\mathbf{X}_{centered}$
+\item Eigendecomposition: $\mathbf{C} = \mathbf{V}\boldsymbol{\Lambda}\mathbf{V}^T$
+\item Select top 50 eigenvectors: $\mathbf{W} = \mathbf{V}_{:,:50}$ (first 50 columns)
+\item Project: $\mathbf{Z} = \mathbf{X}_{centered}\mathbf{W}$
+\end{enumerate}
+
+\textbf{A26.} \textbf{Surface Normal Computation}:
+
+For triangular mesh with vertices $\mathbf{p}_1, \mathbf{p}_2, \mathbf{p}_3$:
+
+\begin{align}
+\mathbf{e}_1 &= \mathbf{p}_2 - \mathbf{p}_1 \\
+\mathbf{e}_2 &= \mathbf{p}_3 - \mathbf{p}_1 \\
+\mathbf{n} &= \mathbf{e}_1 \times \mathbf{e}_2 \quad \text{(normal vector)} \\
+\hat{\mathbf{n}} &= \frac{\mathbf{n}}{\|\mathbf{n}\|} \quad \text{(unit normal)}
+\end{align}
+
+\textit{Application}: Used in lighting calculations, back-face culling, and 3D reconstruction.
+
+\textbf{A27.} \textbf{Rank under non-square transformation}:
+
+For $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m < n$:
+
+\textit{Theorem}: $\text{rank}(\mathbf{A}) \leq \min(m, n) = m$
+
+\textit{Proof}: 
+\begin{itemize}
+\item Rank equals dimension of column space
+\item Column space is subspace of $\mathbb{R}^m$
+\item Maximum dimension of subspace in $\mathbb{R}^m$ is $m$
+\item Therefore, $\text{rank}(\mathbf{A}) \leq m$
+\end{itemize}
+
+\textit{Implication}: When $m < n$, we cannot have full column rank, so information is lost (null space is non-trivial).
+
+\textbf{A28.} \textbf{Proof of anti-commutativity}:
+
+\begin{align}
+\mathbf{a} \times \mathbf{b} &= \begin{bmatrix}
+a_2b_3 - a_3b_2 \\
+a_3b_1 - a_1b_3 \\
+a_1b_2 - a_2b_1
+\end{bmatrix} \\
+\mathbf{b} \times \mathbf{a} &= \begin{bmatrix}
+b_2a_3 - b_3a_2 \\
+b_3a_1 - b_1a_3 \\
+b_1a_2 - b_2a_1
+\end{bmatrix} \\
+&= \begin{bmatrix}
+-(a_2b_3 - a_3b_2) \\
+-(a_3b_1 - a_1b_3) \\
+-(a_1b_2 - a_2b_1)
+\end{bmatrix} \\
+&= -(\mathbf{a} \times \mathbf{b})
+\end{align}
+
+Therefore, $\mathbf{a} \times \mathbf{b} = -(\mathbf{b} \times \mathbf{a})$ $\checkmark$
+
+\textbf{A29.} \textbf{Null space and information loss}:
+
+\textit{Relationship}: $\dim(\mathcal{N}(\mathbf{A})) = n - \text{rank}(\mathbf{A})$
+
+\textit{In dimensionality reduction}:
+\begin{itemize}
+\item Larger null space $\implies$ more information lost
+\item Vectors in null space are mapped to zero
+\item Only information in column space is preserved
+\item Rank-nullity theorem: $\dim(\mathcal{C}(\mathbf{A})) + \dim(\mathcal{N}(\mathbf{A})) = n$
+\end{itemize}
+
+\textit{Example}: PCA with $\mathbf{W} \in \mathbb{R}^{1000 \times 50}$:
+\begin{itemize}
+\item Null space dimension = $1000 - 50 = 950$
+\item 950 dimensions of information are lost
+\item Only 50 principal directions are preserved
+\end{itemize}
+
+\textbf{A30.} \textbf{Determining rank properties}:
+
+For $\mathbf{A} \in \mathbb{R}^{m \times n}$:
+
+\textbf{Full column rank} ($\text{rank}(\mathbf{A}) = n$):
+\begin{itemize}
+\item All columns are linearly independent
+\item Null space is trivial: $\dim(\mathcal{N}(\mathbf{A})) = 0$
+\item Left inverse exists if $m > n$
+\item No information loss in transformation
+\end{itemize}
+
+\textbf{Full row rank} ($\text{rank}(\mathbf{A}) = m$):
+\begin{itemize}
+\item All rows are linearly independent
+\item Column space spans entire $\mathbb{R}^m$
+\item Right inverse exists if $m < n$
+\item Transformation is surjective
+\end{itemize}
+
+\textit{ML implications}:
+\begin{itemize}
+\item Full column rank: Good for feature extraction (no redundancy)
+\item Full row rank: Good for covering output space completely
+\item Rank deficiency: Indicates redundant features or insufficient model capacity
+\end{itemize}
+
+\subsection{Multiple Choice Solutions}
+
+\textbf{A31.} \textbf{(b) A scalar}
+
+\textit{Explanation}: The dot product $\mathbf{a} \cdot \mathbf{b} = \sum_{i=1}^{n} a_i b_i$ is a sum of products, resulting in a single real number (scalar).
+
+\textbf{A32.} \textbf{(b) Only left inverse exists}
+
+\textit{Explanation}: For $m > n$ with full column rank, $\mathbf{A}^T\mathbf{A}$ is invertible, allowing left inverse. Right inverse cannot exist because $\mathbf{A}$ cannot span full $\mathbb{R}^m$ space.
+
+\textbf{A33.} \textbf{(d) Both (b) and (c)}
+
+\textit{Explanation}: Cross product is zero when vectors are parallel ($\mathbf{a} = k\mathbf{b}$) OR when either vector is zero. Both conditions make $\sin \theta = 0$.
+
+\textbf{A34.} \textbf{(b) $128 \times 784$}
+
+\textit{Explanation}: For transformation $\mathbf{h} = \mathbf{W}\mathbf{x} + \mathbf{b}$ where $\mathbf{x} \in \mathbb{R}^{784}$ and $\mathbf{h} \in \mathbb{R}^{128}$, we need $\mathbf{W} \in \mathbb{R}^{128 \times 784}$ to satisfy dimension compatibility: $(128 \times 784)(784 \times 1) = (128 \times 1)$.
+
+\textbf{A35.} \textbf{(b) $O(n)$}
+
+\textit{Explanation}: Dot product requires $n$ multiplications and $n-1$ additions, giving $O(n)$ time complexity. This is linear in the vector dimension.
+
+\newpage
+
+\section{Practice Problems}
+
+\subsection{Computational Problems}
+
+\begin{enumerate}
+\item \textbf{Calculate}: Compute dot product of $\mathbf{a} = [1, 2, 3, 4]^T$ and $\mathbf{b} = [2, -1, 0, 1]^T$.
+
+\item \textbf{If} $\mathbf{A} = \begin{bmatrix} 2 & 1 \\ 0 & 3 \\ 1 & 2 \end{bmatrix}$, find $\mathbf{A}\mathbf{x}$ where $\mathbf{x} = \begin{bmatrix} 1 \\ 2 \end{bmatrix}$.
+
+\item \textbf{Compute} cross product: $\mathbf{a} = \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 4 \\ 5 \\ 6 \end{bmatrix}$.
+
+\item \textbf{Calculate} the angle between $\mathbf{a} = \begin{bmatrix} 1 \\ 1 \\ 0 \end{bmatrix}$ and $\mathbf{b} = \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}$.
+
+\item \textbf{Find} the projection of $\mathbf{b} = \begin{bmatrix} 2 \\ 1 \end{bmatrix}$ onto $\mathbf{a} = \begin{bmatrix} 3 \\ 4 \end{bmatrix}$.
+\end{enumerate}
+
+\subsection{Conceptual Problems}
+
+\begin{enumerate}[resume]
+\item \textbf{Why can't} a non-square matrix $\mathbf{A} \in \mathbb{R}^{m \times n}$ with $m \neq n$ have a true inverse?
+
+\item \textbf{How does} the dot product relate to cosine similarity in machine learning?
+
+\item \textbf{Explain} why the cross product is perpendicular to both input vectors.
+
+\item \textbf{Why does} PCA use a non-square transformation matrix?
+
+\item \textbf{How do} dot products enable efficient computation in neural networks?
+\end{enumerate}
+
+\subsection{Application Problems}
+
+\begin{enumerate}[resume]
+\item \textbf{Design} a neural network layer that transforms 256-dimensional input to 128-dimensional output. Specify the weight matrix dimensions.
+
+\item \textbf{Implement} cosine similarity computation between two document vectors.
+
+\item \textbf{Create} a function to compute surface normal for a triangular face in 3D space.
+
+\item \textbf{Calculate} the left inverse for a given non-square matrix with full column rank.
+
+\item \textbf{Derive} the formula for projection of a vector onto another using dot product.
+\end{enumerate}
+
+\vspace{1cm}
+\begin{center}
+\textbf{End of Notes}
+
+\vspace{0.5cm}
+These comprehensive notes provide the mathematical foundation and practical applications needed for understanding modern machine learning and deep learning algorithms.
+\end{center}
+
+\end{document}
