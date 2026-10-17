@@ -1,0 +1,1967 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable,skins}
+\usepackage{mathtools}
+\usepackage{fancyhdr}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+
+\geometry{margin=1in}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Vector Spaces \& Advanced LA}
+\lhead{Complete Notes}
+\cfoot{\thepage}
+
+\title{\textbf{Vector Spaces and Advanced Linear Algebra Concepts \\ for Machine Learning and Deep Learning}}
+\author{Akshay Redekar}
+\date{\today}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{example}{Example}[section]
+\newtheorem{property}{Property}[section]
+\newtheorem{lemma}{Lemma}[section]
+\newtheorem{corollary}{Corollary}[section]
+
+\definecolor{highlight}{RGB}{255,255,200}
+
+% Add page border using tikz
+\AddToHook{shipout/background}{%
+    \begin{tikzpicture}[remember picture, overlay]
+        \draw[line width=0.5pt]
+            ($(current page.north west) + (0.2in,-0.2in)$)
+            rectangle
+            ($(current page.south east) + (-0.2in,0.2in)$);
+    \end{tikzpicture}
+}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Vector Spaces}
+
+\subsection{Introduction and Motivation}
+
+Vector spaces are fundamental structures in mathematics that generalize the notion of vectors in $\mathbb{R}^n$. They provide the framework for understanding linear algebra, functional analysis, and are essential in machine learning for feature spaces, model representations, and optimization landscapes.
+
+\begin{tcolorbox}[enhanced,breakable,colback=blue!5!white,colframe=blue!75!black,title=Why Vector Spaces in ML/DL?]
+\textbf{Critical Applications:}
+\begin{enumerate}
+    \item \textbf{Feature Spaces:} Input data lives in vector spaces (e.g., $\mathbb{R}^d$ for $d$ features)
+    \item \textbf{Model Parameters:} Weights and biases form vector spaces
+    \item \textbf{Function Spaces:} Neural networks approximate functions in infinite-dimensional spaces
+    \item \textbf{Kernel Methods:} Transform data to higher-dimensional vector spaces
+    \item \textbf{Optimization:} Gradient descent operates in parameter vector spaces
+    \item \textbf{Dimensionality Reduction:} Finding optimal subspaces (PCA, autoencoders)
+    \item \textbf{Embeddings:} Word/image embeddings are vectors in learned spaces
+\end{enumerate}
+\end{tcolorbox}
+
+\subsection{Definition of Vector Spaces}
+
+\begin{definition}[Vector Space]
+A vector space $V$ over a field $\mathbb{F}$ (typically $\mathbb{R}$ or $\mathbb{C}$) is a non-empty set equipped with two operations:
+\begin{enumerate}
+    \item \textbf{Vector Addition:} $+: V \times V \to V$
+    \item \textbf{Scalar Multiplication:} $\cdot: \mathbb{F} \times V \to V$
+\end{enumerate}
+
+These operations must satisfy the following axioms for all $\mathbf{u}, \mathbf{v}, \mathbf{w} \in V$ and $\alpha, \beta \in \mathbb{F}$:
+
+\textbf{Axioms for Vector Addition:}
+\begin{align}
+&\text{A1. Closure:} \quad \mathbf{u} + \mathbf{v} \in V \\
+&\text{A2. Commutativity:} \quad \mathbf{u} + \mathbf{v} = \mathbf{v} + \mathbf{u} \\
+&\text{A3. Associativity:} \quad (\mathbf{u} + \mathbf{v}) + \mathbf{w} = \mathbf{u} + (\mathbf{v} + \mathbf{w}) \\
+&\text{A4. Identity:} \quad \exists \mathbf{0} \in V \text{ s.t. } \mathbf{v} + \mathbf{0} = \mathbf{v} \\
+&\text{A5. Inverse:} \quad \forall \mathbf{v} \in V, \exists (-\mathbf{v}) \in V \text{ s.t. } \mathbf{v} + (-\mathbf{v}) = \mathbf{0}
+\end{align}
+
+\textbf{Axioms for Scalar Multiplication:}
+\begin{align}
+&\text{M1. Closure:} \quad \alpha \mathbf{v} \in V \\
+&\text{M2. Compatibility:} \quad \alpha(\beta \mathbf{v}) = (\alpha\beta)\mathbf{v} \\
+&\text{M3. Identity:} \quad 1 \cdot \mathbf{v} = \mathbf{v} \\
+&\text{M4. Distributivity (scalar):} \quad (\alpha + \beta)\mathbf{v} = \alpha\mathbf{v} + \beta\mathbf{v} \\
+&\text{M5. Distributivity (vector):} \quad \alpha(\mathbf{u} + \mathbf{v}) = \alpha\mathbf{u} + \alpha\mathbf{v}
+\end{align}
+\end{definition}
+
+\subsection{Standard Examples of Vector Spaces}
+
+\begin{example}[Euclidean Space $\mathbb{R}^n$]
+The set of all $n$-tuples of real numbers:
+\begin{equation}
+\mathbb{R}^n = \left\{ \begin{bmatrix} x_1 \\ x_2 \\ \vdots \\ x_n \end{bmatrix} : x_i \in \mathbb{R} \right\}
+\end{equation}
+
+\textbf{Operations:}
+\begin{align}
+\text{Addition: } \begin{bmatrix} x_1 \\ \vdots \\ x_n \end{bmatrix} + \begin{bmatrix} y_1 \\ \vdots \\ y_n \end{bmatrix} &= \begin{bmatrix} x_1 + y_1 \\ \vdots \\ x_n + y_n \end{bmatrix} \\
+\text{Scalar mult: } \alpha \begin{bmatrix} x_1 \\ \vdots \\ x_n \end{bmatrix} &= \begin{bmatrix} \alpha x_1 \\ \vdots \\ \alpha x_n \end{bmatrix}
+\end{align}
+
+\textbf{ML Application:} Feature vectors in classification, regression.
+\end{example}
+
+\begin{example}[Matrix Space $\mathbb{R}^{m \times n}$]
+The set of all $m \times n$ matrices with real entries:
+\begin{equation}
+\mathbb{R}^{m \times n} = \{ A : A \text{ is } m \times n \text{ matrix with entries in } \mathbb{R}\}
+\end{equation}
+
+\textbf{Operations:}
+\begin{align}
+(A + B)_{ij} &= A_{ij} + B_{ij} \\
+(\alpha A)_{ij} &= \alpha A_{ij}
+\end{align}
+
+\textbf{ML Application:} Weight matrices in neural networks, convolutional filters.
+\end{example}
+
+\begin{example}[Polynomial Space $P_n$]
+The set of all polynomials of degree at most $n$:
+\begin{equation}
+P_n = \{a_0 + a_1x + a_2x^2 + \cdots + a_nx^n : a_i \in \mathbb{R}\}
+\end{equation}
+
+\textbf{Operations:}
+\begin{align}
+p(x) + q(x) &= \sum_{i=0}^n (a_i + b_i)x^i \\
+\alpha p(x) &= \sum_{i=0}^n (\alpha a_i)x^i
+\end{align}
+
+\textbf{Dimension:} $\dim(P_n) = n + 1$
+
+\textbf{ML Application:} Polynomial regression, basis functions.
+\end{example}
+
+\begin{example}[Function Space $C[a,b]$]
+The set of all continuous real-valued functions on interval $[a,b]$:
+\begin{equation}
+C[a,b] = \{f : [a,b] \to \mathbb{R} \mid f \text{ is continuous}\}
+\end{equation}
+
+\textbf{Operations:}
+\begin{align}
+(f + g)(x) &= f(x) + g(x) \\
+(\alpha f)(x) &= \alpha f(x)
+\end{align}
+
+\textbf{ML Application:} Neural networks as function approximators, kernel methods.
+\end{example}
+
+\begin{example}[Sequence Space $\ell^2$]
+The set of all square-summable infinite sequences:
+\begin{equation}
+\ell^2 = \left\{(x_1, x_2, x_3, \ldots) : \sum_{i=1}^\infty |x_i|^2 < \infty\right\}
+\end{equation}
+
+\textbf{ML Application:} Infinite-dimensional feature spaces in kernel methods.
+\end{example}
+
+\subsection{Properties of Vector Spaces}
+
+\begin{theorem}[Basic Properties]
+Let $V$ be a vector space over field $\mathbb{F}$. For any $\mathbf{v} \in V$ and $\alpha \in \mathbb{F}$:
+
+\begin{enumerate}
+    \item \textbf{Uniqueness of zero:} The zero vector $\mathbf{0}$ is unique
+    \item \textbf{Uniqueness of inverse:} For each $\mathbf{v}$, the additive inverse $-\mathbf{v}$ is unique
+    \item \textbf{Zero multiplication:} $0 \cdot \mathbf{v} = \mathbf{0}$ and $\alpha \cdot \mathbf{0} = \mathbf{0}$
+    \item \textbf{Negative multiplication:} $(-1) \cdot \mathbf{v} = -\mathbf{v}$
+    \item \textbf{Cancellation:} If $\alpha \mathbf{v} = \mathbf{0}$, then $\alpha = 0$ or $\mathbf{v} = \mathbf{0}$
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof of Property 3]
+We prove $0 \cdot \mathbf{v} = \mathbf{0}$:
+\begin{align}
+0 \cdot \mathbf{v} &= (0 + 0) \cdot \mathbf{v} \quad \text{(property of 0)} \\
+&= 0 \cdot \mathbf{v} + 0 \cdot \mathbf{v} \quad \text{(distributivity)} \\
+0 \cdot \mathbf{v} + (-(0 \cdot \mathbf{v})) &= (0 \cdot \mathbf{v} + 0 \cdot \mathbf{v}) + (-(0 \cdot \mathbf{v})) \\
+\mathbf{0} &= 0 \cdot \mathbf{v} + (0 \cdot \mathbf{v} + (-(0 \cdot \mathbf{v}))) \\
+\mathbf{0} &= 0 \cdot \mathbf{v} + \mathbf{0} \\
+\mathbf{0} &= 0 \cdot \mathbf{v}
+\end{align}
+\end{proof}
+
+\section{Subspaces}
+
+\subsection{Definition and Properties}
+
+\begin{definition}[Subspace]
+A subset $W$ of a vector space $V$ is called a \textbf{subspace} if $W$ is itself a vector space under the same operations as $V$.
+
+\textbf{Equivalent condition (Subspace Test):}
+$W \subseteq V$ is a subspace if and only if:
+\begin{enumerate}
+    \item $\mathbf{0} \in W$ (contains zero vector)
+    \item $\mathbf{u}, \mathbf{v} \in W \Rightarrow \mathbf{u} + \mathbf{v} \in W$ (closed under addition)
+    \item $\alpha \in \mathbb{F}, \mathbf{v} \in W \Rightarrow \alpha\mathbf{v} \in W$ (closed under scalar multiplication)
+\end{enumerate}
+
+\textbf{Compact form:}
+$W$ is a subspace if for all $\alpha, \beta \in \mathbb{F}$ and $\mathbf{u}, \mathbf{v} \in W$:
+\begin{equation}
+\alpha\mathbf{u} + \beta\mathbf{v} \in W
+\end{equation}
+\end{definition}
+
+\begin{example}[Subspaces of $\mathbb{R}^3$]
+Let $V = \mathbb{R}^3$. The following are subspaces:
+
+\textbf{1. Trivial subspace:} $W_0 = \{\mathbf{0}\}$
+
+\textbf{2. Lines through origin:}
+\begin{equation}
+W_1 = \left\{t\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix} : t \in \mathbb{R}\right\} = \text{span}\left\{\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Verification:}
+\begin{itemize}
+    \item Contains $\mathbf{0}$: $t = 0 \Rightarrow \mathbf{0} \in W_1$ ✓
+    \item Closed under addition: $t_1\mathbf{v} + t_2\mathbf{v} = (t_1 + t_2)\mathbf{v} \in W_1$ ✓
+    \item Closed under scalar mult: $\alpha(t\mathbf{v}) = (\alpha t)\mathbf{v} \in W_1$ ✓
+\end{itemize}
+
+\textbf{3. Planes through origin:}
+\begin{equation}
+W_2 = \left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : x + y - z = 0\right\}
+\end{equation}
+
+\textbf{Verification:}
+Check if $\mathbf{u} = \begin{bmatrix} u_1 \\ u_2 \\ u_3 \end{bmatrix}$ and $\mathbf{v} = \begin{bmatrix} v_1 \\ v_2 \\ v_3 \end{bmatrix}$ satisfy $u_1 + u_2 - u_3 = 0$ and $v_1 + v_2 - v_3 = 0$.
+
+For $\alpha\mathbf{u} + \beta\mathbf{v}$:
+\begin{align}
+&(\alpha u_1 + \beta v_1) + (\alpha u_2 + \beta v_2) - (\alpha u_3 + \beta v_3) \\
+&= \alpha(u_1 + u_2 - u_3) + \beta(v_1 + v_2 - v_3) \\
+&= \alpha(0) + \beta(0) = 0 \quad ✓
+\end{align}
+
+\textbf{4. The whole space:} $W_3 = \mathbb{R}^3$
+
+\textbf{Non-example:} A plane not through origin is NOT a subspace.
+\begin{equation}
+W = \left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : x + y - z = 1\right\} \quad \text{(NOT a subspace)}
+\end{equation}
+Does not contain $\mathbf{0}$ since $0 + 0 - 0 = 0 \neq 1$.
+\end{example}
+
+\begin{example}[Column Space and Null Space]
+For matrix $A \in \mathbb{R}^{m \times n}$:
+
+\textbf{1. Column Space:}
+\begin{equation}
+\mathcal{C}(A) = \{\mathbf{y} \in \mathbb{R}^m : \mathbf{y} = A\mathbf{x} \text{ for some } \mathbf{x} \in \mathbb{R}^n\}
+\end{equation}
+
+This is a subspace of $\mathbb{R}^m$ (the codomain).
+
+\textbf{2. Null Space (Kernel):}
+\begin{equation}
+\mathcal{N}(A) = \{\mathbf{x} \in \mathbb{R}^n : A\mathbf{x} = \mathbf{0}\}
+\end{equation}
+
+This is a subspace of $\mathbb{R}^n$ (the domain).
+
+\textbf{Example:}
+\begin{equation}
+A = \begin{bmatrix} 1 & 2 & 1 \\ 2 & 4 & 2 \\ 1 & 2 & 1 \end{bmatrix}
+\end{equation}
+
+\textbf{Column space:}
+\begin{equation}
+\mathcal{C}(A) = \text{span}\left\{\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix}\right\} \subset \mathbb{R}^3
+\end{equation}
+
+\textbf{Null space:} Solve $A\mathbf{x} = \mathbf{0}$:
+\begin{equation}
+\begin{bmatrix} 1 & 2 & 1 \\ 2 & 4 & 2 \\ 1 & 2 & 1 \end{bmatrix} \begin{bmatrix} x_1 \\ x_2 \\ x_3 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+\end{equation}
+
+This gives $x_1 + 2x_2 + x_3 = 0$, so:
+\begin{equation}
+\mathcal{N}(A) = \text{span}\left\{\begin{bmatrix} -2 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} -1 \\ 0 \\ 1 \end{bmatrix}\right\} \subset \mathbb{R}^3
+\end{equation}
+\end{example}
+
+\subsection{Operations on Subspaces}
+
+\begin{theorem}[Intersection of Subspaces]
+If $W_1$ and $W_2$ are subspaces of $V$, then $W_1 \cap W_2$ is also a subspace of $V$.
+\end{theorem}
+
+\begin{proof}
+We verify the subspace conditions:
+\begin{enumerate}
+    \item $\mathbf{0} \in W_1$ and $\mathbf{0} \in W_2 \Rightarrow \mathbf{0} \in W_1 \cap W_2$ ✓
+    \item If $\mathbf{u}, \mathbf{v} \in W_1 \cap W_2$, then:
+    \begin{itemize}
+        \item $\mathbf{u}, \mathbf{v} \in W_1 \Rightarrow \mathbf{u} + \mathbf{v} \in W_1$
+        \item $\mathbf{u}, \mathbf{v} \in W_2 \Rightarrow \mathbf{u} + \mathbf{v} \in W_2$
+        \item Therefore, $\mathbf{u} + \mathbf{v} \in W_1 \cap W_2$ ✓
+    \end{itemize}
+    \item Similar argument for scalar multiplication ✓
+\end{enumerate}
+\end{proof}
+
+\begin{definition}[Sum of Subspaces]
+If $W_1$ and $W_2$ are subspaces of $V$, their sum is:
+\begin{equation}
+W_1 + W_2 = \{\mathbf{w}_1 + \mathbf{w}_2 : \mathbf{w}_1 \in W_1, \mathbf{w}_2 \in W_2\}
+\end{equation}
+
+This is also a subspace of $V$.
+\end{definition}
+
+\begin{definition}[Direct Sum]
+If $W_1 \cap W_2 = \{\mathbf{0}\}$, we write:
+\begin{equation}
+V = W_1 \oplus W_2
+\end{equation}
+
+and say $V$ is the \textbf{direct sum} of $W_1$ and $W_2$.
+
+\textbf{Property:} Every $\mathbf{v} \in V$ has a unique decomposition $\mathbf{v} = \mathbf{w}_1 + \mathbf{w}_2$ with $\mathbf{w}_1 \in W_1$, $\mathbf{w}_2 \in W_2$.
+\end{definition}
+
+\section{Span and Linear Combinations}
+
+\subsection{Linear Combinations}
+
+\begin{definition}[Linear Combination]
+A vector $\mathbf{v}$ is a \textbf{linear combination} of vectors $\mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_n$ if there exist scalars $\alpha_1, \alpha_2, \ldots, \alpha_n$ such that:
+\begin{equation}
+\mathbf{v} = \alpha_1\mathbf{v}_1 + \alpha_2\mathbf{v}_2 + \cdots + \alpha_n\mathbf{v}_n = \sum_{i=1}^n \alpha_i\mathbf{v}_i
+\end{equation}
+
+The scalars $\alpha_i$ are called \textbf{coefficients}.
+\end{definition}
+
+\begin{example}[Linear Combination in $\mathbb{R}^3$]
+Express $\mathbf{v} = \begin{bmatrix} 5 \\ 7 \\ 3 \end{bmatrix}$ as a linear combination of $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix}$ and $\mathbf{v}_2 = \begin{bmatrix} 0 \\ 1 \\ -1 \end{bmatrix}$.
+
+\textbf{Setup:}
+\begin{equation}
+\alpha_1 \begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix} + \alpha_2 \begin{bmatrix} 0 \\ 1 \\ -1 \end{bmatrix} = \begin{bmatrix} 5 \\ 7 \\ 3 \end{bmatrix}
+\end{equation}
+
+\textbf{System of equations:}
+\begin{align}
+\alpha_1 &= 5 \\
+2\alpha_1 + \alpha_2 &= 7 \\
+\alpha_1 - \alpha_2 &= 3
+\end{align}
+
+\textbf{Solution:}
+From equation (1): $\alpha_1 = 5$
+
+Substitute into equation (2): $2(5) + \alpha_2 = 7 \Rightarrow \alpha_2 = -3$
+
+Check with equation (3): $5 - (-3) = 8 \neq 3$ ✗
+
+\textbf{Conclusion:} $\mathbf{v}$ cannot be expressed as a linear combination of $\mathbf{v}_1$ and $\mathbf{v}_2$.
+\end{example}
+
+\subsection{Span}
+
+\begin{definition}[Span]
+The \textbf{span} of a set of vectors $S = \{\mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_n\}$ is the set of all linear combinations:
+\begin{equation}
+\text{span}(S) = \text{span}\{\mathbf{v}_1, \ldots, \mathbf{v}_n\} = \left\{\sum_{i=1}^n \alpha_i\mathbf{v}_i : \alpha_i \in \mathbb{F}\right\}
+\end{equation}
+
+\textbf{Key property:} $\text{span}(S)$ is the smallest subspace containing all vectors in $S$.
+\end{definition}
+
+\begin{theorem}[Span is a Subspace]
+For any set of vectors $S = \{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ in vector space $V$, $\text{span}(S)$ is a subspace of $V$.
+\end{theorem}
+
+\begin{proof}
+We verify the subspace conditions:
+
+\textbf{1. Contains zero:} Take all $\alpha_i = 0$:
+\begin{equation}
+\mathbf{0} = \sum_{i=1}^n 0 \cdot \mathbf{v}_i \in \text{span}(S)
+\end{equation}
+
+\textbf{2. Closed under addition:} Let $\mathbf{u} = \sum_{i=1}^n \alpha_i\mathbf{v}_i$ and $\mathbf{w} = \sum_{i=1}^n \beta_i\mathbf{v}_i$:
+\begin{equation}
+\mathbf{u} + \mathbf{w} = \sum_{i=1}^n \alpha_i\mathbf{v}_i + \sum_{i=1}^n \beta_i\mathbf{v}_i = \sum_{i=1}^n (\alpha_i + \beta_i)\mathbf{v}_i \in \text{span}(S)
+\end{equation}
+
+\textbf{3. Closed under scalar multiplication:} Let $\mathbf{u} = \sum_{i=1}^n \alpha_i\mathbf{v}_i$ and $c \in \mathbb{F}$:
+\begin{equation}
+c\mathbf{u} = c\sum_{i=1}^n \alpha_i\mathbf{v}_i = \sum_{i=1}^n (c\alpha_i)\mathbf{v}_i \in \text{span}(S)
+\end{equation}
+\end{proof}
+
+\begin{example}[Span in $\mathbb{R}^3$]
+\textbf{Example 1:} Single vector
+\begin{equation}
+\text{span}\left\{\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix}\right\} = \left\{t\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix} : t \in \mathbb{R}\right\}
+\end{equation}
+
+This is a line through the origin.
+
+\textbf{Example 2:} Two non-collinear vectors
+\begin{equation}
+\text{span}\left\{\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}\right\} = \left\{\begin{bmatrix} s \\ t \\ 0 \end{bmatrix} : s, t \in \mathbb{R}\right\}
+\end{equation}
+
+This is the $xy$-plane.
+
+\textbf{Example 3:} Three non-coplanar vectors
+\begin{equation}
+\text{span}\left\{\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}\right\} = \mathbb{R}^3
+\end{equation}
+
+This spans all of $\mathbb{R}^3$.
+\end{example}
+
+\begin{example}[Span in Matrix Space]
+In $\mathbb{R}^{2 \times 2}$:
+\begin{equation}
+\text{span}\left\{\begin{bmatrix} 1 & 0 \\ 0 & 0 \end{bmatrix}, \begin{bmatrix} 0 & 1 \\ 0 & 0 \end{bmatrix}, \begin{bmatrix} 0 & 0 \\ 1 & 0 \end{bmatrix}, \begin{bmatrix} 0 & 0 \\ 0 & 1 \end{bmatrix}\right\} = \mathbb{R}^{2 \times 2}
+\end{equation}
+
+Any $2 \times 2$ matrix can be written as:
+\begin{equation}
+\begin{bmatrix} a & b \\ c & d \end{bmatrix} = a\begin{bmatrix} 1 & 0 \\ 0 & 0 \end{bmatrix} + b\begin{bmatrix} 0 & 1 \\ 0 & 0 \end{bmatrix} + c\begin{bmatrix} 0 & 0 \\ 1 & 0 \end{bmatrix} + d\begin{bmatrix} 0 & 0 \\ 0 & 1 \end{bmatrix}
+\end{equation}
+\end{example}
+
+\subsection{Spanning Sets and Generating Sets}
+
+\begin{definition}[Spanning Set]
+A set $S = \{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ \textbf{spans} a vector space $V$ if:
+\begin{equation}
+V = \text{span}(S)
+\end{equation}
+
+We say $S$ is a \textbf{spanning set} or \textbf{generating set} for $V$.
+\end{definition}
+
+\begin{example}[Standard Spanning Sets]
+\textbf{1. Standard basis for $\mathbb{R}^3$:}
+\begin{equation}
+\mathbb{R}^3 = \text{span}\left\{\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{2. Alternative spanning set for $\mathbb{R}^2$:}
+\begin{equation}
+\mathbb{R}^2 = \text{span}\left\{\begin{bmatrix} 1 \\ 1 \end{bmatrix}, \begin{bmatrix} 1 \\ -1 \end{bmatrix}\right\}
+\end{equation}
+
+Verify: Any $\begin{bmatrix} x \\ y \end{bmatrix} = \alpha_1\begin{bmatrix} 1 \\ 1 \end{bmatrix} + \alpha_2\begin{bmatrix} 1 \\ -1 \end{bmatrix}$
+
+Solving: $\alpha_1 = \frac{x+y}{2}$, $\alpha_2 = \frac{x-y}{2}$ ✓
+
+\textbf{3. Polynomials $P_2$:}
+\begin{equation}
+P_2 = \text{span}\{1, x, x^2\}
+\end{equation}
+\end{example}
+
+\section{Linear Independence and Dependence}
+
+\subsection{Definitions}
+
+\begin{definition}[Linear Independence]
+A set of vectors $\{\mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_n\}$ is \textbf{linearly independent} if the only solution to:
+\begin{equation}
+\alpha_1\mathbf{v}_1 + \alpha_2\mathbf{v}_2 + \cdots + \alpha_n\mathbf{v}_n = \mathbf{0}
+\end{equation}
+is $\alpha_1 = \alpha_2 = \cdots = \alpha_n = 0$ (the trivial solution).
+
+\textbf{Equivalently:} No vector in the set can be written as a linear combination of the others.
+\end{definition}
+
+\begin{definition}[Linear Dependence]
+A set of vectors is \textbf{linearly dependent} if it is not linearly independent. That is, there exist scalars $\alpha_1, \ldots, \alpha_n$ (not all zero) such that:
+\begin{equation}
+\alpha_1\mathbf{v}_1 + \alpha_2\mathbf{v}_2 + \cdots + \alpha_n\mathbf{v}_n = \mathbf{0}
+\end{equation}
+
+\textbf{Equivalently:} At least one vector can be expressed as a linear combination of the others.
+\end{definition}
+
+\begin{example}[Testing Linear Independence in $\mathbb{R}^3$]
+\textbf{Example 1:} Are $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}$, $\mathbf{v}_2 = \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}$, $\mathbf{v}_3 = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}$ linearly independent?
+
+\textbf{Setup:}
+\begin{equation}
+\alpha_1\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix} + \alpha_2\begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix} + \alpha_3\begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+\end{equation}
+
+\textbf{This gives:}
+\begin{equation}
+\begin{bmatrix} \alpha_1 \\ \alpha_2 \\ \alpha_3 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+\end{equation}
+
+Only solution: $\alpha_1 = \alpha_2 = \alpha_3 = 0$
+
+\textbf{Conclusion:} Linearly independent ✓
+
+\textbf{Example 2:} Are $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}$, $\mathbf{v}_2 = \begin{bmatrix} 2 \\ 4 \\ 6 \end{bmatrix}$ linearly independent?
+
+\textbf{Observation:} $\mathbf{v}_2 = 2\mathbf{v}_1$
+
+So: $2\mathbf{v}_1 - 1\mathbf{v}_2 = \mathbf{0}$ (non-trivial solution)
+
+\textbf{Conclusion:} Linearly dependent ✗
+\end{example}
+
+\subsection{Testing Linear Independence}
+
+\begin{theorem}[Matrix Method for Testing Independence]
+Vectors $\mathbf{v}_1, \ldots, \mathbf{v}_n$ in $\mathbb{R}^m$ are linearly independent if and only if the matrix:
+\begin{equation}
+A = [\mathbf{v}_1 \mid \mathbf{v}_2 \mid \cdots \mid \mathbf{v}_n]
+\end{equation}
+has rank $n$ (i.e., all columns are pivot columns).
+
+\textbf{Equivalently:} The system $A\mathbf{x} = \mathbf{0}$ has only the trivial solution.
+\end{theorem}
+
+\begin{example}[Using Row Reduction]
+Test if $\mathbf{v}_1 = \begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix}$, $\mathbf{v}_2 = \begin{bmatrix} 2 \\ 1 \\ 0 \end{bmatrix}$, $\mathbf{v}_3 = \begin{bmatrix} 1 \\ -1 \\ -1 \end{bmatrix}$ are linearly independent.
+
+\textbf{Form matrix:}
+\begin{equation}
+A = \begin{bmatrix} 1 & 2 & 1 \\ 2 & 1 & -1 \\ 1 & 0 & -1 \end{bmatrix}
+\end{equation}
+
+\textbf{Row reduce to RREF:}
+\begin{align}
+\begin{bmatrix} 1 & 2 & 1 \\ 2 & 1 & -1 \\ 1 & 0 & -1 \end{bmatrix} &\xrightarrow{R_2 - 2R_1} \begin{bmatrix} 1 & 2 & 1 \\ 0 & -3 & -3 \\ 1 & 0 & -1 \end{bmatrix} \\
+&\xrightarrow{R_3 - R_1} \begin{bmatrix} 1 & 2 & 1 \\ 0 & -3 & -3 \\ 0 & -2 & -2 \end{bmatrix} \\
+&\xrightarrow{R_2 \div (-3)} \begin{bmatrix} 1 & 2 & 1 \\ 0 & 1 & 1 \\ 0 & -2 & -2 \end{bmatrix} \\
+&\xrightarrow{R_3 + 2R_2} \begin{bmatrix} 1 & 2 & 1 \\ 0 & 1 & 1 \\ 0 & 0 & 0 \end{bmatrix}
+\end{align}
+
+\textbf{Analysis:} Only 2 pivot columns (rank = 2)
+
+\textbf{Conclusion:} Linearly dependent (only 2 independent vectors among 3) ✗
+
+\textbf{Find dependency:} From RREF, $x_3$ is free. Let $x_3 = 1$:
+\begin{align}
+x_2 + x_3 &= 0 \Rightarrow x_2 = -1 \\
+x_1 + 2x_2 + x_3 &= 0 \Rightarrow x_1 = 1
+\end{align}
+
+Dependency relation: $\mathbf{v}_1 - \mathbf{v}_2 + \mathbf{v}_3 = \mathbf{0}$
+
+Or: $\mathbf{v}_3 = -\mathbf{v}_1 + \mathbf{v}_2$
+\end{example}
+
+\subsection{Properties of Linear Independence}
+
+\begin{theorem}[Key Properties]
+\begin{enumerate}
+    \item Any set containing the zero vector is linearly dependent
+    
+    \item A set with exactly two vectors is linearly dependent if and only if one is a scalar multiple of the other
+    
+    \item If $\{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ is linearly independent, then any subset is also linearly independent
+    
+    \item If $\{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ is linearly dependent, then any superset is also linearly dependent
+    
+    \item In $\mathbb{R}^n$, any set of more than $n$ vectors is linearly dependent
+    
+    \item A set of vectors is linearly dependent if and only if at least one vector is in the span of the others
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}[Proof of Property 1]
+If $\mathbf{v}_1 = \mathbf{0}$, then:
+\begin{equation}
+1 \cdot \mathbf{0} + 0 \cdot \mathbf{v}_2 + \cdots + 0 \cdot \mathbf{v}_n = \mathbf{0}
+\end{equation}
+
+This is a non-trivial linear combination (coefficient of $\mathbf{0}$ is 1 $\neq$ 0), so the set is linearly dependent.
+\end{proof}
+
+\section{Basis and Dimension}
+
+\subsection{Definition of Basis}
+
+\begin{definition}[Basis]
+A set $\mathcal{B} = \{\mathbf{v}_1, \mathbf{v}_2, \ldots, \mathbf{v}_n\}$ is a \textbf{basis} for vector space $V$ if:
+\begin{enumerate}
+    \item $\mathcal{B}$ is linearly independent
+    \item $\mathcal{B}$ spans $V$ (i.e., $\text{span}(\mathcal{B}) = V$)
+\end{enumerate}
+
+\textbf{Equivalent definition:} $\mathcal{B}$ is a basis if every vector in $V$ can be expressed \textit{uniquely} as a linear combination of vectors in $\mathcal{B}$.
+\end{definition}
+
+\begin{theorem}[Uniqueness of Representation]
+If $\mathcal{B} = \{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ is a basis for $V$, then every $\mathbf{v} \in V$ has a unique representation:
+\begin{equation}
+\mathbf{v} = \alpha_1\mathbf{v}_1 + \alpha_2\mathbf{v}_2 + \cdots + \alpha_n\mathbf{v}_n
+\end{equation}
+
+The coefficients $(\alpha_1, \alpha_2, \ldots, \alpha_n)$ are called the \textbf{coordinates} of $\mathbf{v}$ with respect to basis $\mathcal{B}$.
+\end{theorem}
+
+\begin{proof}
+\textbf{Existence:} Since $\mathcal{B}$ spans $V$, every $\mathbf{v} \in V$ can be written as a linear combination.
+
+\textbf{Uniqueness:} Suppose $\mathbf{v} = \sum_{i=1}^n \alpha_i\mathbf{v}_i = \sum_{i=1}^n \beta_i\mathbf{v}_i$
+
+Then: $\sum_{i=1}^n (\alpha_i - \beta_i)\mathbf{v}_i = \mathbf{0}$
+
+Since $\mathcal{B}$ is linearly independent: $\alpha_i - \beta_i = 0$ for all $i$
+
+Therefore: $\alpha_i = \beta_i$ for all $i$ ✓
+\end{proof}
+
+\subsection{Standard Bases}
+
+\begin{example}[Standard Basis for $\mathbb{R}^n$]
+The \textbf{standard basis} (or \textbf{canonical basis}) for $\mathbb{R}^n$ is:
+\begin{equation}
+\mathcal{E} = \{\mathbf{e}_1, \mathbf{e}_2, \ldots, \mathbf{e}_n\}
+\end{equation}
+where:
+\begin{equation}
+\mathbf{e}_i = \begin{bmatrix} 0 \\ \vdots \\ 0 \\ 1 \\ 0 \\ \vdots \\ 0 \end{bmatrix} \leftarrow \text{$i$-th position}
+\end{equation}
+
+\textbf{For $\mathbb{R}^3$:}
+\begin{equation}
+\mathcal{E} = \left\{\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+Any vector $\mathbf{v} = \begin{bmatrix} x \\ y \\ z \end{bmatrix} = x\mathbf{e}_1 + y\mathbf{e}_2 + z\mathbf{e}_3$
+\end{example}
+
+\begin{example}[Other Standard Bases]
+\textbf{1. Polynomial space $P_n$:}
+\begin{equation}
+\mathcal{B} = \{1, x, x^2, \ldots, x^n\}
+\end{equation}
+
+Any polynomial: $p(x) = a_0(1) + a_1x + a_2x^2 + \cdots + a_nx^n$
+
+\textbf{2. Matrix space $\mathbb{R}^{2 \times 2}$:}
+\begin{equation}
+\mathcal{B} = \left\{\begin{bmatrix} 1 & 0 \\ 0 & 0 \end{bmatrix}, \begin{bmatrix} 0 & 1 \\ 0 & 0 \end{bmatrix}, \begin{bmatrix} 0 & 0 \\ 1 & 0 \end{bmatrix}, \begin{bmatrix} 0 & 0 \\ 0 & 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{3. Complex numbers $\mathbb{C}$ (as vector space over $\mathbb{R}$):}
+\begin{equation}
+\mathcal{B} = \{1, i\}
+\end{equation}
+
+Any complex number: $z = a(1) + b(i) = a + bi$
+\end{example}
+
+\begin{example}[Non-Standard Bases for $\mathbb{R}^2$]
+\textbf{Basis 1:}
+\begin{equation}
+\mathcal{B}_1 = \left\{\begin{bmatrix} 1 \\ 1 \end{bmatrix}, \begin{bmatrix} 1 \\ -1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Verify independence:}
+\begin{equation}
+\alpha_1\begin{bmatrix} 1 \\ 1 \end{bmatrix} + \alpha_2\begin{bmatrix} 1 \\ -1 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}
+\end{equation}
+
+System: $\alpha_1 + \alpha_2 = 0$ and $\alpha_1 - \alpha_2 = 0$
+
+Solution: $\alpha_1 = \alpha_2 = 0$ ✓ (linearly independent)
+
+\textbf{Verify spanning:} Any $\begin{bmatrix} x \\ y \end{bmatrix}$ can be written as:
+\begin{equation}
+\begin{bmatrix} x \\ y \end{bmatrix} = \frac{x+y}{2}\begin{bmatrix} 1 \\ 1 \end{bmatrix} + \frac{x-y}{2}\begin{bmatrix} 1 \\ -1 \end{bmatrix}
+\end{equation}
+
+✓ (spans $\mathbb{R}^2$)
+
+\textbf{Basis 2:}
+\begin{equation}
+\mathcal{B}_2 = \left\{\begin{bmatrix} 3 \\ 1 \end{bmatrix}, \begin{bmatrix} -2 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+Can verify similarly that this is also a basis for $\mathbb{R}^2$.
+\end{example}
+
+\subsection{Dimension}
+
+\begin{theorem}[Invariance of Basis Size]
+If $V$ has a finite basis, then all bases of $V$ have the same number of elements.
+\end{theorem}
+
+\begin{definition}[Dimension]
+The \textbf{dimension} of a vector space $V$, denoted $\dim(V)$, is the number of vectors in any basis for $V$.
+
+\textbf{Convention:} $\dim(\{\mathbf{0}\}) = 0$ (the zero space)
+
+If $V$ has no finite basis, we say $V$ is \textbf{infinite-dimensional}.
+\end{definition}
+
+\begin{example}[Dimensions of Standard Spaces]
+\begin{align}
+\dim(\mathbb{R}^n) &= n \\
+\dim(\mathbb{C}^n) &= n \quad \text{(over $\mathbb{C}$)}, \quad 2n \quad \text{(over $\mathbb{R}$)} \\
+\dim(P_n) &= n + 1 \\
+\dim(\mathbb{R}^{m \times n}) &= mn \\
+\dim(C[a,b]) &= \infty
+\end{align}
+\end{example}
+
+\begin{theorem}[Dimension Theorems]
+Let $V$ be a vector space with $\dim(V) = n$.
+
+\begin{enumerate}
+    \item Any linearly independent set of $n$ vectors is a basis
+    
+    \item Any spanning set of $n$ vectors is a basis
+    
+    \item Any linearly independent set can be extended to a basis
+    
+    \item Any spanning set contains a basis
+    
+    \item Any linearly independent set of more than $n$ vectors in $V$ is impossible
+    
+    \item Any set of fewer than $n$ vectors cannot span $V$
+\end{enumerate}
+\end{theorem}
+
+\begin{theorem}[Rank-Nullity Theorem]
+For a linear transformation $T: V \to W$ (or matrix $A \in \mathbb{R}^{m \times n}$):
+\begin{equation}
+\dim(V) = \dim(\text{ker}(T)) + \dim(\text{im}(T))
+\end{equation}
+
+For matrices:
+\begin{equation}
+n = \dim(\mathcal{N}(A)) + \text{rank}(A)
+\end{equation}
+
+where:
+\begin{itemize}
+    \item $\mathcal{N}(A)$ = null space (kernel)
+    \item $\text{rank}(A)$ = dimension of column space
+\end{itemize}
+\end{theorem}
+
+\begin{example}[Applying Rank-Nullity]
+Consider $A = \begin{bmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{bmatrix}$
+
+\textbf{Row reduce:}
+\begin{equation}
+\text{RREF}(A) = \begin{bmatrix} 1 & 0 & -1 \\ 0 & 1 & 2 \\ 0 & 0 & 0 \end{bmatrix}
+\end{equation}
+
+\textbf{Rank:} 2 (two pivot columns)
+
+\textbf{Nullity:} $\dim(\mathcal{N}(A)) = 3 - 2 = 1$
+
+\textbf{Null space basis:} Solve $A\mathbf{x} = \mathbf{0}$:
+\begin{equation}
+\mathcal{N}(A) = \text{span}\left\{\begin{bmatrix} 1 \\ -2 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Verify:} $\dim(\mathcal{N}(A)) + \text{rank}(A) = 1 + 2 = 3 = n$ ✓
+\end{example}
+
+\subsection{Subspace Dimensions}
+
+\begin{theorem}[Dimension of Subspaces]
+If $W$ is a subspace of finite-dimensional vector space $V$, then:
+\begin{enumerate}
+    \item $\dim(W) \leq \dim(V)$
+    \item $\dim(W) = \dim(V)$ if and only if $W = V$
+\end{enumerate}
+\end{theorem}
+
+\begin{theorem}[Dimension of Sum]
+For subspaces $W_1$ and $W_2$ of $V$:
+\begin{equation}
+\dim(W_1 + W_2) = \dim(W_1) + \dim(W_2) - \dim(W_1 \cap W_2)
+\end{equation}
+
+\textbf{Special case (Direct Sum):} If $W_1 \cap W_2 = \{\mathbf{0}\}$:
+\begin{equation}
+\dim(W_1 \oplus W_2) = \dim(W_1) + \dim(W_2)
+\end{equation}
+\end{theorem}
+
+\section{Change of Basis}
+
+\subsection{Coordinate Vectors}
+
+\begin{definition}[Coordinate Vector]
+Let $\mathcal{B} = \{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ be a basis for $V$. For $\mathbf{v} \in V$ with:
+\begin{equation}
+\mathbf{v} = \alpha_1\mathbf{v}_1 + \cdots + \alpha_n\mathbf{v}_n
+\end{equation}
+
+The \textbf{coordinate vector} of $\mathbf{v}$ relative to $\mathcal{B}$ is:
+\begin{equation}
+[\mathbf{v}]_\mathcal{B} = \begin{bmatrix} \alpha_1 \\ \alpha_2 \\ \vdots \\ \alpha_n \end{bmatrix}
+\end{equation}
+\end{definition}
+
+\begin{example}[Coordinate Vectors in $\mathbb{R}^2$]
+Let $\mathbf{v} = \begin{bmatrix} 5 \\ 3 \end{bmatrix}$ and two bases:
+
+\textbf{Standard basis:} $\mathcal{E} = \left\{\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \end{bmatrix}\right\}$
+
+\textbf{Coordinates:}
+\begin{equation}
+[\mathbf{v}]_\mathcal{E} = \begin{bmatrix} 5 \\ 3 \end{bmatrix}
+\end{equation}
+
+\textbf{Alternative basis:} $\mathcal{B} = \left\{\begin{bmatrix} 1 \\ 1 \end{bmatrix}, \begin{bmatrix} 1 \\ -1 \end{bmatrix}\right\}$
+
+Find $\alpha_1, \alpha_2$ such that:
+\begin{equation}
+\begin{bmatrix} 5 \\ 3 \end{bmatrix} = \alpha_1\begin{bmatrix} 1 \\ 1 \end{bmatrix} + \alpha_2\begin{bmatrix} 1 \\ -1 \end{bmatrix}
+\end{equation}
+
+\textbf{System:}
+\begin{align}
+\alpha_1 + \alpha_2 &= 5 \\
+\alpha_1 - \alpha_2 &= 3
+\end{align}
+
+\textbf{Solution:} $\alpha_1 = 4$, $\alpha_2 = 1$
+
+\textbf{Coordinates:}
+\begin{equation}
+[\mathbf{v}]_\mathcal{B} = \begin{bmatrix} 4 \\ 1 \end{bmatrix}
+\end{equation}
+\end{example}
+
+\subsection{Change of Basis Matrix}
+
+\begin{definition}[Change of Basis Matrix]
+Let $\mathcal{B} = \{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ and $\mathcal{C} = \{\mathbf{w}_1, \ldots, \mathbf{w}_n\}$ be two bases for $V$.
+
+The \textbf{change of basis matrix} from $\mathcal{B}$ to $\mathcal{C}$ is:
+\begin{equation}
+P_{\mathcal{C} \leftarrow \mathcal{B}} = \begin{bmatrix} [\mathbf{v}_1]_\mathcal{C} & [\mathbf{v}_2]_\mathcal{C} & \cdots & [\mathbf{v}_n]_\mathcal{C} \end{bmatrix}
+\end{equation}
+
+This matrix satisfies:
+\begin{equation}
+[\mathbf{v}]_\mathcal{C} = P_{\mathcal{C} \leftarrow \mathcal{B}} [\mathbf{v}]_\mathcal{B}
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Properties of Change of Basis Matrix]
+\begin{enumerate}
+    \item $P_{\mathcal{C} \leftarrow \mathcal{B}}$ is invertible
+    
+    \item $(P_{\mathcal{C} \leftarrow \mathcal{B}})^{-1} = P_{\mathcal{B} \leftarrow \mathcal{C}}$
+    
+    \item $P_{\mathcal{B} \leftarrow \mathcal{B}} = I$ (identity)
+    
+    \item $P_{\mathcal{C} \leftarrow \mathcal{A}} = P_{\mathcal{C} \leftarrow \mathcal{B}} P_{\mathcal{B} \leftarrow \mathcal{A}}$ (composition)
+\end{enumerate}
+\end{theorem}
+
+\begin{example}[Computing Change of Basis Matrix]
+In $\mathbb{R}^2$, let:
+\begin{equation}
+\mathcal{B} = \left\{\mathbf{v}_1 = \begin{bmatrix} 1 \\ 1 \end{bmatrix}, \mathbf{v}_2 = \begin{bmatrix} 1 \\ -1 \end{bmatrix}\right\}, \quad \mathcal{E} = \left\{\begin{bmatrix} 1 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Find $P_{\mathcal{E} \leftarrow \mathcal{B}}$:}
+
+Since $\mathcal{E}$ is the standard basis:
+\begin{equation}
+[\mathbf{v}_1]_\mathcal{E} = \begin{bmatrix} 1 \\ 1 \end{bmatrix}, \quad [\mathbf{v}_2]_\mathcal{E} = \begin{bmatrix} 1 \\ -1 \end{bmatrix}
+\end{equation}
+
+Therefore:
+\begin{equation}
+P_{\mathcal{E} \leftarrow \mathcal{B}} = \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix}
+\end{equation}
+
+\textbf{Find $P_{\mathcal{B} \leftarrow \mathcal{E}}$:}
+
+We need to express standard basis vectors in terms of $\mathcal{B}$:
+
+For $\mathbf{e}_1 = \begin{bmatrix} 1 \\ 0 \end{bmatrix}$:
+\begin{equation}
+\begin{bmatrix} 1 \\ 0 \end{bmatrix} = \alpha_1\begin{bmatrix} 1 \\ 1 \end{bmatrix} + \alpha_2\begin{bmatrix} 1 \\ -1 \end{bmatrix}
+\end{equation}
+
+Solving: $\alpha_1 = \frac{1}{2}$, $\alpha_2 = \frac{1}{2}$
+
+For $\mathbf{e}_2 = \begin{bmatrix} 0 \\ 1 \end{bmatrix}$:
+\begin{equation}
+\begin{bmatrix} 0 \\ 1 \end{bmatrix} = \beta_1\begin{bmatrix} 1 \\ 1 \end{bmatrix} + \beta_2\begin{bmatrix} 1 \\ -1 \end{bmatrix}
+\end{equation}
+
+Solving: $\beta_1 = \frac{1}{2}$, $\beta_2 = -\frac{1}{2}$
+
+Therefore:
+\begin{equation}
+P_{\mathcal{B} \leftarrow \mathcal{E}} = \begin{bmatrix} \frac{1}{2} & \frac{1}{2} \\ \frac{1}{2} & -\frac{1}{2} \end{bmatrix}
+\end{equation}
+
+\textbf{Verify:}
+\begin{equation}
+P_{\mathcal{E} \leftarrow \mathcal{B}} P_{\mathcal{B} \leftarrow \mathcal{E}} = \begin{bmatrix} 1 & 1 \\ 1 & -1 \end{bmatrix} \begin{bmatrix} \frac{1}{2} & \frac{1}{2} \\ \frac{1}{2} & -\frac{1}{2} \end{bmatrix} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} = I \quad ✓
+\end{equation}
+\end{example}
+
+\subsection{Algorithm for Change of Basis}
+
+\begin{tcolorbox}[enhanced,breakable,colback=green!5!white,colframe=green!75!black,title=Algorithm: Finding Change of Basis Matrix from $\mathcal{B}$ to $\mathcal{E}$]
+\textbf{Given:} Basis $\mathcal{B} = \{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ in $\mathbb{R}^n$
+
+\textbf{Goal:} Find $P_{\mathcal{B} \leftarrow \mathcal{E}}$ (from standard basis to $\mathcal{B}$)
+
+\textbf{Method:}
+\begin{enumerate}
+    \item Form augmented matrix $[B \mid I]$ where $B = [\mathbf{v}_1 \mid \cdots \mid \mathbf{v}_n]$
+    \item Row reduce to $[I \mid P]$
+    \item The resulting $P = P_{\mathcal{B} \leftarrow \mathcal{E}} = B^{-1}$
+\end{enumerate}
+
+\textbf{Note:} $P_{\mathcal{E} \leftarrow \mathcal{B}} = B$ (just the matrix of basis vectors)
+\end{tcolorbox}
+
+\section{Applications in Machine Learning and Deep Learning}
+
+\subsection{Feature Spaces and Data Representation}
+
+\begin{tcolorbox}[enhanced,breakable,colback=blue!5!white,colframe=blue!75!black,title=ML Application: Feature Spaces]
+In machine learning, data points are represented as vectors in a feature space.
+
+\textbf{Example: Image Classification}
+\begin{itemize}
+    \item Grayscale image: $28 \times 28$ pixels → vector in $\mathbb{R}^{784}$
+    \item Color image: $224 \times 224 \times 3$ → vector in $\mathbb{R}^{150528}$
+    \item Feature space: $V = \mathbb{R}^d$ where $d$ is number of features
+\end{itemize}
+
+\textbf{Linear Independence in Features:}
+\begin{itemize}
+    \item Redundant features → linearly dependent
+    \item Feature selection aims to find linearly independent subset
+    \item Multicollinearity in regression: features are linearly dependent
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Principal Component Analysis (PCA)}
+
+\begin{tcolorbox}[enhanced,breakable,colback=green!5!white,colframe=green!75!black,title=PCA as Change of Basis]
+\textbf{Goal:} Find optimal basis (principal components) for data
+
+\textbf{Mathematical Framework:}
+\begin{enumerate}
+    \item Data matrix $X \in \mathbb{R}^{n \times d}$ (n samples, d features)
+    \item Compute covariance matrix $\Sigma = \frac{1}{n}X^TX$
+    \item Find eigenvectors $\mathbf{v}_1, \ldots, \mathbf{v}_d$ of $\Sigma$
+    \item These form a new orthonormal basis
+    \item Project data onto this basis: $Z = XP$ where $P = [\mathbf{v}_1 \mid \cdots \mid \mathbf{v}_k]$
+\end{enumerate}
+
+\textbf{Key Insight:}
+\begin{itemize}
+    \item Original basis: standard features
+    \item New basis: principal components (directions of maximum variance)
+    \item Change of basis matrix: eigenvector matrix
+\end{itemize}
+\end{tcolorbox}
+
+\begin{example}[PCA Example]
+Dataset in $\mathbb{R}^2$: $\{(2,1), (3,2), (4,3), (5,4)\}$
+
+\textbf{Step 1: Center data}
+Mean: $\bar{\mathbf{x}} = \begin{bmatrix} 3.5 \\ 2.5 \end{bmatrix}$
+
+\textbf{Step 2: Covariance matrix}
+\begin{equation}
+\Sigma = \begin{bmatrix} 1.67 & 1.67 \\ 1.67 & 1.67 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 3: Eigenvalues and eigenvectors}
+\begin{align}
+\lambda_1 &= 3.34, \quad \mathbf{v}_1 = \frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 1 \end{bmatrix} \\
+\lambda_2 &= 0, \quad \mathbf{v}_2 = \frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ -1 \end{bmatrix}
+\end{align}
+
+\textbf{Step 4: New basis}
+\begin{equation}
+\mathcal{B}_{PCA} = \left\{\frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ 1 \end{bmatrix}, \frac{1}{\sqrt{2}}\begin{bmatrix} 1 \\ -1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Interpretation:} First principal component captures all variance; data lies on a line in $\mathbb{R}^2$.
+\end{example}
+
+\subsection{Neural Network Weight Spaces}
+
+\begin{tcolorbox}[enhanced,breakable,colback=orange!5!white,colframe=orange!75!black,title=Parameter Space in Deep Learning]
+\textbf{Neural Network Parameters as Vector Space}
+
+For a neural network with $L$ layers:
+\begin{itemize}
+    \item Weights and biases: $\theta = (W^{(1)}, b^{(1)}, \ldots, W^{(L)}, b^{(L)})$
+    \item Flatten into single vector: $\theta \in \mathbb{R}^p$ where $p$ = total parameters
+    \item Parameter space is a vector space
+\end{itemize}
+
+\textbf{Optimization as Vector Space Operation:}
+\begin{equation}
+\theta_{t+1} = \theta_t - \eta \nabla_\theta \mathcal{L}(\theta_t)
+\end{equation}
+
+This is vector addition in parameter space!
+
+\textbf{Gradient Descent Properties:}
+\begin{itemize}
+    \item Gradients form a vector space
+    \item Linear combinations of gradients (momentum, Adam)
+    \item Subspaces of parameters (layer-wise training)
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Kernel Methods and Infinite Dimensions}
+
+\begin{tcolorbox}[enhanced,breakable,colback=purple!5!white,colframe=purple!75!black,title=Infinite-Dimensional Feature Spaces]
+\textbf{Kernel Trick:} Implicitly map data to infinite-dimensional space
+
+\textbf{Example: RBF Kernel}
+\begin{equation}
+k(\mathbf{x}, \mathbf{x}') = \exp\left(-\frac{\|\mathbf{x} - \mathbf{x}'\|^2}{2\sigma^2}\right)
+\end{equation}
+
+Maps to infinite-dimensional Hilbert space $\mathcal{H}$ where:
+\begin{itemize}
+    \item Inner product defined by kernel
+    \item Linear methods in $\mathcal{H}$ → non-linear in original space
+\end{itemize}
+
+\textbf{Reproducing Kernel Hilbert Space (RKHS):}
+\begin{itemize}
+    \item Function space with special properties
+    \item Basis functions: $\{k(\cdot, \mathbf{x}_i)\}_{i=1}^n$
+    \item Representer theorem: solution lies in finite-dimensional subspace
+\end{itemize}
+\end{tcolorbox}
+
+\subsection{Word Embeddings}
+
+\begin{example}[Word2Vec as Vector Space]
+\textbf{Embedding space:} $V = \mathbb{R}^{300}$ (typical dimension)
+
+Each word mapped to vector: $w \mapsto \mathbf{v}_w \in \mathbb{R}^{300}$
+
+\textbf{Linear Structure:}
+\begin{equation}
+\mathbf{v}_{\text{king}} - \mathbf{v}_{\text{man}} + \mathbf{v}_{\text{woman}} \approx \mathbf{v}_{\text{queen}}
+\end{equation}
+
+\textbf{Vector space operations:}
+\begin{itemize}
+    \item Addition: semantic combination
+    \item Subtraction: removing concepts
+    \item Scalar multiplication: amplifying meaning
+    \item Cosine similarity: measuring semantic closeness
+\end{itemize}
+
+\textbf{Span interpretation:}
+\begin{itemize}
+    \item Learned embeddings span a subspace of $\mathbb{R}^{300}$
+    \item Actual dimension (intrinsic) often much smaller
+    \item Basis: latent semantic dimensions
+\end{itemize}
+\end{example}
+
+\section{Worked Examples}
+
+\subsection{Complete Example 1: Verifying a Basis}
+
+\begin{example}[Verification Exercise]
+\textbf{Problem:} Verify that $\mathcal{B} = \left\{\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix}, \begin{bmatrix} 2 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}\right\}$ is a basis for $\mathbb{R}^3$.
+
+\textbf{Solution:}
+
+\textbf{Step 1: Check linear independence}
+
+Form matrix and row reduce:
+\begin{equation}
+A = \begin{bmatrix} 1 & 2 & 0 \\ 2 & 1 & 1 \\ 1 & 0 & 1 \end{bmatrix}
+\end{equation}
+
+\begin{align}
+\begin{bmatrix} 1 & 2 & 0 \\ 2 & 1 & 1 \\ 1 & 0 & 1 \end{bmatrix} &\xrightarrow{R_2 - 2R_1} \begin{bmatrix} 1 & 2 & 0 \\ 0 & -3 & 1 \\ 1 & 0 & 1 \end{bmatrix} \\
+&\xrightarrow{R_3 - R_1} \begin{bmatrix} 1 & 2 & 0 \\ 0 & -3 & 1 \\ 0 & -2 & 1 \end{bmatrix} \\
+&\xrightarrow{R_3 - \frac{2}{3}R_2} \begin{bmatrix} 1 & 2 & 0 \\ 0 & -3 & 1 \\ 0 & 0 & \frac{1}{3} \end{bmatrix}
+\end{align}
+
+Three pivot columns → rank = 3 → linearly independent ✓
+
+\textbf{Step 2: Check spanning}
+
+Since we have 3 linearly independent vectors in $\mathbb{R}^3$, and $\dim(\mathbb{R}^3) = 3$, they must span $\mathbb{R}^3$ ✓
+
+\textbf{Conclusion:} $\mathcal{B}$ is a basis for $\mathbb{R}^3$.
+\end{example}
+
+\subsection{Complete Example 2: Finding Coordinates}
+
+\begin{example}[Coordinate Calculation]
+\textbf{Problem:} Find the coordinates of $\mathbf{v} = \begin{bmatrix} 7 \\ 5 \\ 3 \end{bmatrix}$ with respect to basis $\mathcal{B}$ from Example 1.
+
+\textbf{Solution:}
+
+We need to find $\alpha_1, \alpha_2, \alpha_3$ such that:
+\begin{equation}
+\begin{bmatrix} 7 \\ 5 \\ 3 \end{bmatrix} = \alpha_1\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix} + \alpha_2\begin{bmatrix} 2 \\ 1 \\ 0 \end{bmatrix} + \alpha_3\begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}
+\end{equation}
+
+\textbf{Set up augmented matrix:}
+\begin{equation}
+\left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 2 & 1 & 1 & 5 \\ 1 & 0 & 1 & 3 \end{array}\right]
+\end{equation}
+
+\textbf{Row reduce:}
+\begin{align}
+\left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 2 & 1 & 1 & 5 \\ 1 & 0 & 1 & 3 \end{array}\right] &\xrightarrow{R_2 - 2R_1} \left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 0 & -3 & 1 & -9 \\ 1 & 0 & 1 & 3 \end{array}\right] \\
+&\xrightarrow{R_3 - R_1} \left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 0 & -3 & 1 & -9 \\ 0 & -2 & 1 & -4 \end{array}\right] \\
+&\xrightarrow{R_2 \div (-3)} \left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 0 & 1 & -\frac{1}{3} & 3 \\ 0 & -2 & 1 & -4 \end{array}\right] \\
+&\xrightarrow{R_3 + 2R_2} \left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 0 & 1 & -\frac{1}{3} & 3 \\ 0 & 0 & \frac{1}{3} & 2 \end{array}\right] \\
+&\xrightarrow{R_3 \times 3} \left[\begin{array}{ccc|c} 1 & 2 & 0 & 7 \\ 0 & 1 & -\frac{1}{3} & 3 \\ 0 & 0 & 1 & 6 \end{array}\right]
+\end{align}
+
+\textbf{Back substitution:}
+\begin{align}
+\alpha_3 &= 6 \\
+\alpha_2 - \frac{1}{3}(6) &= 3 \Rightarrow \alpha_2 = 5 \\
+\alpha_1 + 2(5) &= 7 \Rightarrow \alpha_1 = -3
+\end{align}
+
+\textbf{Answer:}
+\begin{equation}
+[\mathbf{v}]_\mathcal{B} = \begin{bmatrix} -3 \\ 5 \\ 6 \end{bmatrix}
+\end{equation}
+
+\textbf{Verification:}
+\begin{align}
+&-3\begin{bmatrix} 1 \\ 2 \\ 1 \end{bmatrix} + 5\begin{bmatrix} 2 \\ 1 \\ 0 \end{bmatrix} + 6\begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix} \\
+&= \begin{bmatrix} -3 \\ -6 \\ -3 \end{bmatrix} + \begin{bmatrix} 10 \\ 5 \\ 0 \end{bmatrix} + \begin{bmatrix} 0 \\ 6 \\ 6 \end{bmatrix} = \begin{bmatrix} 7 \\ 5 \\ 3 \end{bmatrix} \quad ✓
+\end{align}
+\end{example}
+
+\subsection{Complete Example 3: Dimension of Subspace}
+
+\begin{example}[Finding Basis and Dimension]
+\textbf{Problem:} Find a basis and dimension for:
+\begin{equation}
+W = \left\{\begin{bmatrix} x \\ y \\ z \\ w \end{bmatrix} \in \mathbb{R}^4 : x + y - z = 0, \quad 2x - y + w = 0\right\}
+\end{equation}
+
+\textbf{Solution:}
+
+\textbf{Step 1: Express constraints in matrix form}
+\begin{equation}
+\begin{bmatrix} 1 & 1 & -1 & 0 \\ 2 & -1 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ z \\ w \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 2: Row reduce}
+\begin{align}
+\begin{bmatrix} 1 & 1 & -1 & 0 \\ 2 & -1 & 0 & 1 \end{bmatrix} &\xrightarrow{R_2 - 2R_1} \begin{bmatrix} 1 & 1 & -1 & 0 \\ 0 & -3 & 2 & 1 \end{bmatrix}
+\end{align}
+
+\textbf{Step 3: Identify free variables}
+
+Pivot columns: 1, 2 → Basic variables: $x, y$
+
+Free variables: $z, w$
+
+\textbf{Step 4: Express basic variables in terms of free}
+
+From row 2: $-3y + 2z + w = 0 \Rightarrow y = \frac{2z + w}{3}$
+
+From row 1: $x + \frac{2z + w}{3} - z = 0 \Rightarrow x = \frac{z - w}{3}$
+
+\textbf{Step 5: Parametric form}
+\begin{equation}
+\begin{bmatrix} x \\ y \\ z \\ w \end{bmatrix} = \begin{bmatrix} \frac{z - w}{3} \\ \frac{2z + w}{3} \\ z \\ w \end{bmatrix} = z\begin{bmatrix} \frac{1}{3} \\ \frac{2}{3} \\ 1 \\ 0 \end{bmatrix} + w\begin{bmatrix} -\frac{1}{3} \\ \frac{1}{3} \\ 0 \\ 1 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 6: Clear fractions (optional)}
+
+Multiply first vector by 3:
+\begin{equation}
+W = \text{span}\left\{\begin{bmatrix} 1 \\ 2 \\ 3 \\ 0 \end{bmatrix}, \begin{bmatrix} -1 \\ 1 \\ 0 \\ 3 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Answer:}
+\begin{itemize}
+    \item Basis: $\mathcal{B}_W = \left\{\begin{bmatrix} 1 \\ 2 \\ 3 \\ 0 \end{bmatrix}, \begin{bmatrix} -1 \\ 1 \\ 0 \\ 3 \end{bmatrix}\right\}$
+    \item Dimension: $\dim(W) = 2$
+\end{itemize}
+
+\textbf{Verify using Rank-Nullity:}
+\begin{equation}
+\dim(W) = 4 - \text{rank}(A) = 4 - 2 = 2 \quad ✓
+\end{equation}
+\end{example}
+
+\section{Assessment Questions}
+
+\subsection{Level 1: Conceptual Understanding}
+
+\textbf{Q1.} Define a vector space and list the ten axioms.
+
+\textbf{Q2.} What is the difference between a subspace and a subset?
+
+\textbf{Q3.} Give three examples of vector spaces, one of which is not $\mathbb{R}^n$.
+
+\textbf{Q4.} What does it mean for vectors to be linearly independent?
+
+\textbf{Q5.} Define a basis and explain why the representation in a basis is unique.
+
+\textbf{Q6.} What is the dimension of $\mathbb{R}^{5}$? What is the dimension of $P_3$?
+
+\textbf{Q7.} True or False: Every linearly independent set is a basis. Explain.
+
+\textbf{Q8.} True or False: The union of two subspaces is a subspace. Explain.
+
+\textbf{Q9.} What is the zero vector in the vector space of $2 \times 2$ matrices?
+
+\textbf{Q10.} Can a set of 4 vectors span $\mathbb{R}^5$? Explain.
+
+\subsection{Level 2: Computational}
+
+\textbf{Q11.} Determine if $W = \left\{\begin{bmatrix} x \\ y \end{bmatrix} : 2x + 3y = 0\right\}$ is a subspace of $\mathbb{R}^2$.
+
+\textbf{Q12.} Test if $\left\{\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}, \begin{bmatrix} 4 \\ 5 \\ 6 \end{bmatrix}, \begin{bmatrix} 7 \\ 8 \\ 9 \end{bmatrix}\right\}$ is linearly independent.
+
+\textbf{Q13.} Find a basis for the null space of $A = \begin{bmatrix} 1 & 2 & 3 & 4 \\ 2 & 4 & 6 & 8 \end{bmatrix}$.
+
+\textbf{Q14.} Express $\begin{bmatrix} 5 \\ 7 \end{bmatrix}$ in terms of basis $\left\{\begin{bmatrix} 1 \\ 2 \end{bmatrix}, \begin{bmatrix} 3 \\ 4 \end{bmatrix}\right\}$.
+
+\textbf{Q15.} Find the dimension of $\text{span}\left\{\begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}, \begin{bmatrix} 1 \\ 1 \\ 2 \end{bmatrix}\right\}$.
+
+\textbf{Q16.} Compute the change of basis matrix from $\mathcal{B} = \left\{\begin{bmatrix} 1 \\ 1 \end{bmatrix}, \begin{bmatrix} -1 \\ 1 \end{bmatrix}\right\}$ to the standard basis.
+
+\textbf{Q17.} Find a basis for $P_2$ (polynomials of degree $\leq 2$) different from $\{1, x, x^2\}$.
+
+\textbf{Q18.} Is $\{1, \sin(x), \cos(x)\}$ linearly independent in $C[0, 2\pi]$?
+
+\textbf{Q19.} Find the dimension of the intersection $W_1 \cap W_2$ where:
+\begin{align}
+W_1 &= \text{span}\left\{\begin{bmatrix} 1 \\ 0 \\ 1 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix}\right\} \\
+W_2 &= \left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : x + y + z = 0\right\}
+\end{align}
+
+\textbf{Q20.} Extend $\left\{\begin{bmatrix} 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix}\right\}$ to a basis for $\mathbb{R}^3$.
+
+\subsection{Level 3: Advanced and Proofs}
+
+\textbf{Q21.} Prove that the intersection of two subspaces is a subspace.
+
+\textbf{Q22.} Prove that if $\{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ is linearly dependent, then one vector is in the span of the others.
+
+\textbf{Q23.} Prove the Rank-Nullity Theorem for a $3 \times 4$ matrix.
+
+\textbf{Q24.} Show that $\dim(W_1 + W_2) = \dim(W_1) + \dim(W_2) - \dim(W_1 \cap W_2)$.
+
+\textbf{Q25.} Prove that any $n + 1$ vectors in $\mathbb{R}^n$ are linearly dependent.
+
+\textbf{Q26.} Let $V$ be finite-dimensional. Prove that any linearly independent set can be extended to a basis.
+
+\textbf{Q27.} Show that the set of solutions to $A\mathbf{x} = \mathbf{0}$ forms a subspace.
+
+\textbf{Q28.} Prove that if $\dim(V) = n$ and $\{\mathbf{v}_1, \ldots, \mathbf{v}_n\}$ spans $V$, then it is a basis.
+
+\textbf{Q29.} Let $T: V \to W$ be linear. Prove that $\ker(T)$ is a subspace of $V$ and $\text{im}(T)$ is a subspace of $W$.
+
+\textbf{Q30.} Prove that for finite-dimensional spaces, $\dim(V^*) = \dim(V)$ where $V^*$ is the dual space.
+
+\section{Solutions to Selected Problems}
+
+\subsection{Solution to Q11}
+
+\textbf{Problem:} Determine if $W = \left\{\begin{bmatrix} x \\ y \end{bmatrix} : 2x + 3y = 0\right\}$ is a subspace of $\mathbb{R}^2$.
+
+\textbf{Solution:}
+
+\textbf{Check 1: Contains zero}
+\begin{equation}
+\begin{bmatrix} 0 \\ 0 \end{bmatrix}: \quad 2(0) + 3(0) = 0 \quad ✓
+\end{equation}
+
+\textbf{Check 2: Closed under addition}
+
+Let $\mathbf{u} = \begin{bmatrix} u_1 \\ u_2 \end{bmatrix}, \mathbf{v} = \begin{bmatrix} v_1 \\ v_2 \end{bmatrix} \in W$
+
+Then: $2u_1 + 3u_2 = 0$ and $2v_1 + 3v_2 = 0$
+
+For $\mathbf{u} + \mathbf{v} = \begin{bmatrix} u_1 + v_1 \\ u_2 + v_2 \end{bmatrix}$:
+\begin{align}
+2(u_1 + v_1) + 3(u_2 + v_2) &= 2u_1 + 2v_1 + 3u_2 + 3v_2 \\
+&= (2u_1 + 3u_2) + (2v_1 + 3v_2) \\
+&= 0 + 0 = 0 \quad ✓
+\end{align}
+
+\textbf{Check 3: Closed under scalar multiplication}
+
+Let $\mathbf{u} = \begin{bmatrix} u_1 \\ u_2 \end{bmatrix} \in W$ and $c \in \mathbb{R}$
+
+Then: $2u_1 + 3u_2 = 0$
+
+For $c\mathbf{u} = \begin{bmatrix} cu_1 \\ cu_2 \end{bmatrix}$:
+\begin{align}
+2(cu_1) + 3(cu_2) &= c(2u_1 + 3u_2) \\
+&= c(0) = 0 \quad ✓
+\end{align}
+
+\textbf{Conclusion:} $W$ is a subspace of $\mathbb{R}^2$ ✓
+
+\textbf{Geometric interpretation:} $W$ is a line through the origin with slope $-\frac{2}{3}$.
+
+\subsection{Solution to Q12}
+
+\textbf{Problem:} Test if $\left\{\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix}, \begin{bmatrix} 4 \\ 5 \\ 6 \end{bmatrix}, \begin{bmatrix} 7 \\ 8 \\ 9 \end{bmatrix}\right\}$ is linearly independent.
+
+\textbf{Solution:}
+
+Form matrix and row reduce:
+\begin{equation}
+A = \begin{bmatrix} 1 & 4 & 7 \\ 2 & 5 & 8 \\ 3 & 6 & 9 \end{bmatrix}
+\end{equation}
+
+\begin{align}
+\begin{bmatrix} 1 & 4 & 7 \\ 2 & 5 & 8 \\ 3 & 6 & 9 \end{bmatrix} &\xrightarrow{R_2 - 2R_1} \begin{bmatrix} 1 & 4 & 7 \\ 0 & -3 & -6 \\ 3 & 6 & 9 \end{bmatrix} \\
+&\xrightarrow{R_3 - 3R_1} \begin{bmatrix} 1 & 4 & 7 \\ 0 & -3 & -6 \\ 0 & -6 & -12 \end{bmatrix} \\
+&\xrightarrow{R_3 - 2R_2} \begin{bmatrix} 1 & 4 & 7 \\ 0 & -3 & -6 \\ 0 & 0 & 0 \end{bmatrix}
+\end{align}
+
+\textbf{Analysis:} Only 2 pivot columns → rank = 2
+
+\textbf{Conclusion:} Linearly dependent ✗
+
+\textbf{Dependency relation:} From RREF, let $x_3 = 1$ (free variable):
+\begin{align}
+-3x_2 - 6(1) &= 0 \Rightarrow x_2 = -2 \\
+x_1 + 4(-2) + 7(1) &= 0 \Rightarrow x_1 = 1
+\end{align}
+
+Therefore: $\begin{bmatrix} 1 \\ 2 \\ 3 \end{bmatrix} - 2\begin{bmatrix} 4 \\ 5 \\ 6 \end{bmatrix} + \begin{bmatrix} 7 \\ 8 \\ 9 \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}$
+
+\subsection{Solution to Q13}
+
+\textbf{Problem:} Find a basis for the null space of $A = \begin{bmatrix} 1 & 2 & 3 & 4 \\ 2 & 4 & 6 & 8 \end{bmatrix}$.
+
+\textbf{Solution:}
+
+\textbf{Step 1: Row reduce}
+\begin{equation}
+\begin{bmatrix} 1 & 2 & 3 & 4 \\ 2 & 4 & 6 & 8 \end{bmatrix} \xrightarrow{R_2 - 2R_1} \begin{bmatrix} 1 & 2 & 3 & 4 \\ 0 & 0 & 0 & 0 \end{bmatrix}
+\end{equation}
+
+\textbf{Step 2: Identify pivot and free variables}
+\begin{itemize}
+    \item Pivot column: 1 → Basic variable: $x_1$
+    \item Free variables: $x_2, x_3, x_4$
+\end{itemize}
+
+\textbf{Step 3: Express basic in terms of free}
+
+From $x_1 + 2x_2 + 3x_3 + 4x_4 = 0$:
+\begin{equation}
+x_1 = -2x_2 - 3x_3 - 4x_4
+\end{equation}
+
+\textbf{Step 4: Parametric solution}
+\begin{align}
+\begin{bmatrix} x_1 \\ x_2 \\ x_3 \\ x_4 \end{bmatrix} &= \begin{bmatrix} -2x_2 - 3x_3 - 4x_4 \\ x_2 \\ x_3 \\ x_4 \end{bmatrix} \\
+&= x_2\begin{bmatrix} -2 \\ 1 \\ 0 \\ 0 \end{bmatrix} + x_3\begin{bmatrix} -3 \\ 0 \\ 1 \\ 0 \end{bmatrix} + x_4\begin{bmatrix} -4 \\ 0 \\ 0 \\ 1 \end{bmatrix}
+\end{align}
+
+\textbf{Answer:}
+\begin{equation}
+\mathcal{B}_{\mathcal{N}(A)} = \left\{\begin{bmatrix} -2 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} -3 \\ 0 \\ 1 \\ 0 \end{bmatrix}, \begin{bmatrix} -4 \\ 0 \\ 0 \\ 1 \end{bmatrix}\right\}
+\end{equation}
+
+\textbf{Dimension:} $\dim(\mathcal{N}(A)) = 3$
+
+\textbf{Verify Rank-Nullity:} $4 = 1 + 3$ ✓
+
+\subsection{Solution to Q21 (Proof)}
+
+\textbf{Theorem:} If $W_1$ and $W_2$ are subspaces of $V$, then $W_1 \cap W_2$ is also a subspace of $V$.
+
+\textbf{Proof:}
+
+We must verify the three subspace conditions:
+
+\textbf{(1) Contains zero vector}
+
+Since $W_1$ is a subspace, $\mathbf{0} \in W_1$.
+
+Since $W_2$ is a subspace, $\mathbf{0} \in W_2$.
+
+Therefore, $\mathbf{0} \in W_1 \cap W_2$. ✓
+
+\textbf{(2) Closed under addition}
+
+Let $\mathbf{u}, \mathbf{v} \in W_1 \cap W_2$.
+
+Then $\mathbf{u}, \mathbf{v} \in W_1$ and $\mathbf{u}, \mathbf{v} \in W_2$.
+
+Since $W_1$ is a subspace: $\mathbf{u} + \mathbf{v} \in W_1$.
+
+Since $W_2$ is a subspace: $\mathbf{u} + \mathbf{v} \in W_2$.
+
+Therefore, $\mathbf{u} + \mathbf{v} \in W_1 \cap W_2$. ✓
+
+\textbf{(3) Closed under scalar multiplication}
+
+Let $\mathbf{v} \in W_1 \cap W_2$ and $c \in \mathbb{F}$.
+
+Then $\mathbf{v} \in W_1$ and $\mathbf{v} \in W_2$.
+
+Since $W_1$ is a subspace: $c\mathbf{v} \in W_1$.
+
+Since $W_2$ is a subspace: $c\mathbf{v} \in W_2$.
+
+Therefore, $c\mathbf{v} \in W_1 \cap W_2$. ✓
+
+All three conditions are satisfied, so $W_1 \cap W_2$ is a subspace. $\square$
+
+\section{Practice Problems}
+
+\subsection{Computational Practice}
+
+\textbf{P1.} Determine which of the following are subspaces of $\mathbb{R}^3$:
+\begin{enumerate}[label=(\alph*)]
+    \item $\left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : x = 0\right\}$
+    \item $\left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : x + y = 1\right\}$
+    \item $\left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : xy = 0\right\}$
+    \item $\left\{\begin{bmatrix} x \\ y \\ z \end{bmatrix} : x = y = z\right\}$
+\end{enumerate}
+
+\textbf{P2.} Find all values of $k$ for which the vectors are linearly dependent:
+\begin{equation}
+\begin{bmatrix} 1 \\ k \\ 2 \end{bmatrix}, \begin{bmatrix} k \\ 1 \\ k \end{bmatrix}, \begin{bmatrix} 2 \\ k \\ 1 \end{bmatrix}
+\end{equation}
+
+\textbf{P3.} Find a basis for the row space, column space, and null space of:
+\begin{equation}
+A = \begin{bmatrix} 1 & 2 & 1 & 0 \\ 2 & 4 & 3 & 1 \\ 3 & 6 & 4 & 1 \end{bmatrix}
+\end{equation}
+
+\textbf{P4.} Given basis $\mathcal{B} = \{1 + x, 1 - x, x^2\}$ for $P_2$, find the coordinates of $p(x) = 3 + 2x + x^2$.
+
+\textbf{P5.} Extend $\left\{\begin{bmatrix} 1 \\ 1 \\ 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 1 \\ 0 \\ 1 \\ 0 \end{bmatrix}\right\}$ to a basis for $\mathbb{R}^4$.
+
+\subsection{Conceptual Practice}
+
+\textbf{P6.} Explain why the set of invertible $n \times n$ matrices is NOT a vector space.
+
+\textbf{P7.} Give an example showing that the union of two subspaces is not necessarily a subspace.
+
+\textbf{P8.} Why does every vector space have at least two subspaces?
+
+\textbf{P9.} If $\dim(V) = n$, what is the maximum dimension of a proper subspace?
+
+\textbf{P10.} Can a vector space have exactly 5 elements? Explain.
+
+\subsection{ML/DL Application Practice}
+
+\textbf{P11.} In neural network training, parameters form a vector space. If a network has:
+\begin{itemize}
+    \item Layer 1: $100 \times 784$ weight matrix + 100 biases
+    \item Layer 2: $10 \times 100$ weight matrix + 10 biases
+\end{itemize}
+What is the dimension of the parameter space?
+
+\textbf{P12.} In PCA, you have data in $\mathbb{R}^{50}$ and want to reduce to 5 dimensions. What is the dimension of:
+\begin{enumerate}[label=(\alph*)]
+    \item The original feature space?
+    \item The subspace spanned by principal components?
+    \item The "lost" information subspace?
+\end{enumerate}
+
+\textbf{P13.} Word embeddings map vocabulary of size 10,000 to $\mathbb{R}^{300}$. If the actual embedded vectors span a subspace of dimension 150:
+\begin{enumerate}[label=(\alph*)]
+    \item What is the intrinsic dimension of the embedding space?
+    \item What does this suggest about the redundancy?
+    \item How many basis vectors truly characterize the embeddings?
+\end{enumerate}
+
+\section{Summary and Key Takeaways}
+
+\begin{tcolorbox}[enhanced,breakable,colback=yellow!10!white,colframe=orange!75!black,title=Essential Concepts]
+\textbf{Vector Spaces:}
+\begin{itemize}
+    \item Abstract structure generalizing $\mathbb{R}^n$
+    \item Defined by 10 axioms (5 for addition, 5 for scalar multiplication)
+    \item Examples: $\mathbb{R}^n$, matrices, polynomials, functions
+\end{itemize}
+
+\textbf{Subspaces:}
+\begin{itemize}
+    \item Subset that is itself a vector space
+    \item Must contain $\mathbf{0}$, closed under addition and scalar multiplication
+    \item Intersection of subspaces is a subspace
+    \item Union generally is NOT a subspace
+\end{itemize}
+
+\textbf{Linear Independence:}
+\begin{itemize}
+    \item Only trivial combination gives zero
+    \item Test via row reduction (check for pivot columns)
+    \item At most $n$ independent vectors in $\mathbb{R}^n$
+\end{itemize}
+
+\textbf{Basis and Dimension:}
+\begin{itemize}
+    \item Basis = linearly independent spanning set
+    \item Unique representation in a basis
+    \item Dimension = number of basis vectors
+    \item All bases have same size
+\end{itemize}
+
+\textbf{Key Theorems:}
+\begin{itemize}
+    \item Rank-Nullity: $n = \dim(\mathcal{N}(A)) + \text{rank}(A)$
+    \item Dimension Formula: $\dim(W_1 + W_2) = \dim(W_1) + \dim(W_2) - \dim(W_1 \cap W_2)$
+    \item Extension Theorem: Independent sets can be extended to bases
+    \item Reduction Theorem: Spanning sets contain bases
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[enhanced,breakable,colback=green!10!white,colframe=green!75!black,title=ML/DL Connections]
+\textbf{Feature Spaces:}
+\begin{itemize}
+    \item Data points are vectors in $\mathbb{R}^d$
+    \item Linearly dependent features → redundancy
+    \item Dimension reduction finds optimal subspaces
+\end{itemize}
+
+\textbf{Parameter Spaces:}
+\begin{itemize}
+    \item Neural network weights form high-dimensional vector spaces
+    \item Optimization moves through this space
+    \item Gradients are vectors in parameter space
+\end{itemize}
+
+\textbf{Transformations:}
+\begin{itemize}
+    \item PCA: change of basis to principal components
+    \item Embeddings: mapping to learned vector spaces
+    \item Kernels: implicit infinite-dimensional spaces
+\end{itemize}
+
+\textbf{Practical Importance:}
+\begin{itemize}
+    \item Understanding dimensions → model complexity
+    \item Basis choice → computational efficiency
+    \item Subspace structure → regularization strategies
+\end{itemize}
+\end{tcolorbox}
+
+\section{Further Reading and Resources}
+
+\subsection{Textbooks}
+
+\begin{enumerate}
+    \item \textbf{Linear Algebra and Its Applications} by Gilbert Strang
+    \begin{itemize}
+        \item Comprehensive coverage of vector spaces
+        \item Excellent geometric intuition
+        \item MIT OpenCourseWare lectures available
+    \end{itemize}
+    
+    \item \textbf{Linear Algebra Done Right} by Sheldon Axler
+    \begin{itemize}
+        \item Abstract, proof-based approach
+        \item Emphasizes vector spaces over matrices
+        \item Great for theoretical understanding
+    \end{itemize}
+    
+    \item \textbf{Introduction to Linear Algebra} by Gilbert Strang
+    \begin{itemize}
+        \item More accessible than "Applications"
+        \item Strong on applications
+        \item Good for self-study
+    \end{itemize}
+    
+    \item \textbf{Matrix Analysis and Applied Linear Algebra} by Carl Meyer
+    \begin{itemize}
+        \item Balance of theory and computation
+        \item Many worked examples
+        \item Free online version available
+    \end{itemize}
+    
+    \item \textbf{Deep Learning} by Goodfellow, Bengio, and Courville
+    \begin{itemize}
+        \item Chapter 2: Linear Algebra for ML/DL
+        \item Focus on practical applications
+        \item Connection to deep learning
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Online Resources}
+
+\begin{enumerate}
+    \item \textbf{Khan Academy: Linear Algebra}
+    \begin{itemize}
+        \item Free video lectures
+        \item Interactive exercises
+        \item \url{https://www.khanacademy.org/math/linear-algebra}
+    \end{itemize}
+    
+    \item \textbf{3Blue1Brown: Essence of Linear Algebra}
+    \begin{itemize}
+        \item Outstanding visual explanations
+        \item Geometric intuition
+        \item \url{https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab}
+    \end{itemize}
+    
+    \item \textbf{MIT OCW 18.06: Linear Algebra}
+    \begin{itemize}
+        \item Professor Gilbert Strang
+        \item Complete course materials
+        \item \url{https://ocw.mit.edu/courses/18-06-linear-algebra-spring-2010/}
+    \end{itemize}
+    
+    \item \textbf{Computational Linear Algebra for Coders}
+    \begin{itemize}
+        \item Fast.ai course
+        \item Practical, code-first approach
+        \item \url{https://github.com/fastai/numerical-linear-algebra}
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Research Papers and Articles}
+
+\begin{enumerate}
+    \item \textbf{"A Tutorial on Principal Component Analysis"} by Jonathon Shlens
+    \begin{itemize}
+        \item Clear explanation of PCA
+        \item Connection to eigenspaces
+    \end{itemize}
+    
+    \item \textbf{"The Matrix Calculus You Need For Deep Learning"} by Terence Parr and Jeremy Howard
+    \begin{itemize}
+        \item Practical guide for ML practitioners
+        \item Vector space perspective
+    \end{itemize}
+    
+    \item \textbf{"Understanding the difficulty of training deep feedforward neural networks"} by Glorot and Bengio
+    \begin{itemize}
+        \item Initialization in parameter space
+        \item Geometric perspective
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Interactive Tools}
+
+\begin{enumerate}
+    \item \textbf{GeoGebra}
+    \begin{itemize}
+        \item Visualize vector spaces and transformations
+        \item \url{https://www.geogebra.org/}
+    \end{itemize}
+    
+    \item \textbf{Desmos Matrix Calculator}
+    \begin{itemize}
+        \item Interactive matrix operations
+        \item \url{https://www.desmos.com/matrix}
+    \end{itemize}
+    
+    \item \textbf{Seeing Theory: Linear Algebra}
+    \begin{itemize}
+        \item Visual, interactive explanations
+        \item \url{https://seeing-theory.brown.edu/}
+    \end{itemize}
+\end{enumerate}
+
+\section{Appendix: Python Implementations}
+
+\subsection{Testing Linear Independence}
+
+\begin{verbatim}
+import numpy as np
+
+def is_linearly_independent(vectors):
+    """
+    Test if a set of vectors is linearly independent.
+    
+    Args:
+        vectors: list of numpy arrays or 2D array (vectors as columns)
+    
+    Returns:
+        bool: True if linearly independent, False otherwise
+    """
+    # Convert to matrix (vectors as columns)
+    if isinstance(vectors, list):
+        A = np.column_stack(vectors)
+    else:
+        A = vectors
+    
+    # Check rank
+    rank = np.linalg.matrix_rank(A)
+    num_vectors = A.shape[1]
+    
+    return rank == num_vectors
+
+# Example usage
+v1 = np.array([1, 2, 3])
+v2 = np.array([4, 5, 6])
+v3 = np.array([7, 8, 9])
+
+vectors = [v1, v2, v3]
+print(f"Linearly independent: {is_linearly_independent(vectors)}")
+# Output: False (these are linearly dependent)
+
+# Test with independent vectors
+u1 = np.array([1, 0, 0])
+u2 = np.array([0, 1, 0])
+u3 = np.array([0, 0, 1])
+
+print(f"Linearly independent: {is_linearly_independent([u1, u2, u3])}")
+# Output: True
+\end{verbatim}
+
+\subsection{Finding Basis for Null Space}
+
+\begin{verbatim}
+import numpy as np
+from scipy.linalg import null_space
+
+def find_null_space_basis(A, tol=1e-10):
+    """
+    Find a basis for the null space of matrix A.
+    
+    Args:
+        A: numpy array (m x n matrix)
+        tol: tolerance for zero singular values
+    
+    Returns:
+        basis: numpy array with basis vectors as columns
+    """
+    # Use SVD-based null space computation
+    ns = null_space(A, rcond=tol)
+    
+    # If null space is trivial
+    if ns.shape[1] == 0:
+        print("Null space contains only zero vector")
+        return None
+    
+    return ns
+
+# Example
+A = np.array([[1, 2, 3, 4],
+              [2, 4, 6, 8]])
+
+basis = find_null_space_basis(A)
+print("Null space basis:")
+print(basis)
+
+# Verify: A @ basis should be approximately zero
+print("\nVerification (should be near zero):")
+print(A @ basis)
+\end{verbatim}
+
+\subsection{Coordinate Vector Computation}
+
+\begin{verbatim}
+import numpy as np
+
+def find_coordinates(v, basis):
+    """
+    Find coordinates of vector v with respect to given basis.
+    
+    Args:
+        v: numpy array (vector to represent)
+        basis: list of numpy arrays or 2D array (basis vectors as columns)
+    
+    Returns:
+        coords: numpy array (coordinate vector)
+    """
+    # Form basis matrix
+    if isinstance(basis, list):
+        B = np.column_stack(basis)
+    else:
+        B = basis
+    
+    # Solve B @ coords = v
+    coords = np.linalg.solve(B, v)
+    
+    return coords
+
+# Example in R^2
+v = np.array([5, 3])
+
+# Standard basis
+e1 = np.array([1, 0])
+e2 = np.array([0, 1])
+coords_std = find_coordinates(v, [e1, e2])
+print(f"Coordinates in standard basis: {coords_std}")
+
+# Alternative basis
+b1 = np.array([1, 1])
+b2 = np.array([1, -1])
+coords_alt = find_coordinates(v, [b1, b2])
+print(f"Coordinates in alternative basis: {coords_alt}")
+
+# Verify
+reconstruction = coords_alt[0] * b1 + coords_alt[1] * b2
+print(f"Reconstruction: {reconstruction}")
+print(f"Original: {v}")
+\end{verbatim}
+
+\subsection{Change of Basis Matrix}
+
+\begin{verbatim}
+import numpy as np
+
+def change_of_basis_matrix(old_basis, new_basis):
+    """
+    Compute change of basis matrix from old_basis to new_basis.
+    
+    Args:
+        old_basis: list of vectors or matrix (old basis vectors as columns)
+        new_basis: list of vectors or matrix (new basis vectors as columns)
+    
+    Returns:
+        P: change of basis matrix such that [v]_new = P @ [v]_old
+    """
+    # Form basis matrices
+    if isinstance(old_basis, list):
+        B_old = np.column_stack(old_basis)
+    else:
+        B_old = old_basis
+        
+    if isinstance(new_basis, list):
+        B_new = np.column_stack(new_basis)
+    else:
+        B_new = new_basis
+    
+    # P = B_new^(-1) @ B_old
+    P = np.linalg.solve(B_new, B_old)
+    
+    return P
+
+# Example
+# Old basis
+b1_old = np.array([1, 1])
+b2_old = np.array([1, -1])
+
+# New basis (standard)
+b1_new = np.array([1, 0])
+b2_new = np.array([0, 1])
+
+P = change_of_basis_matrix([b1_old, b2_old], [b1_new, b2_new])
+print("Change of basis matrix:")
+print(P)
+
+# Test with a vector
+v_old_coords = np.array([4, 1])  # coordinates in old basis
+v_new_coords = P @ v_old_coords   # coordinates in new basis
+print(f"\nCoordinates in old basis: {v_old_coords}")
+print(f"Coordinates in new basis: {v_new_coords}")
+\end{verbatim}
+
+\subsection{Dimension of Subspace Intersection}
+
+\begin{verbatim}
+import numpy as np
+
+def subspace_intersection_dim(A, B):
+    """
+    Find dimension of intersection of two subspaces.
+    
+    Args:
+        A: matrix whose columns span subspace W1
+        B: matrix whose columns span subspace W2
+    
+    Returns:
+        dim: dimension of W1 ∩ W2
+    """
+    # Combine into one matrix
+    AB = np.hstack([A, B])
+    
+    # Find rank of combined space (W1 + W2)
+    rank_sum = np.linalg.matrix_rank(AB)
+    
+    # Find individual ranks
+    rank_A = np.linalg.matrix_rank(A)
+    rank_B = np.linalg.matrix_rank(B)
+    
+    # Use dimension formula:
+    # dim(W1 + W2) = dim(W1) + dim(W2) - dim(W1 ∩ W2)
+    dim_intersection = rank_A + rank_B - rank_sum
+    
+    return dim_intersection
+
+# Example
+# W1 spanned by columns of A
+A = np.array([[1, 0],
+              [0, 1],
+              [1, 1]])
+
+# W2 spanned by columns of B  
+B = np.array([[1, 1],
+              [1, 1],
+              [0, 2]])
+
+dim = subspace_intersection_dim(A, B)
+print(f"Dimension of intersection: {dim}")
+\end{verbatim}
+
+\section{Conclusion}
+
+Vector spaces form the mathematical foundation for understanding linear algebra and its applications in machine learning and deep learning. The concepts covered in these notes—from basic definitions to advanced topics like change of basis—are essential for:
+
+\begin{itemize}
+    \item Understanding how data is represented and transformed
+    \item Designing efficient neural network architectures
+    \item Implementing dimensionality reduction techniques
+    \item Analyzing optimization algorithms
+    \item Developing new machine learning methods
+\end{itemize}
+
+Mastery of vector spaces provides the geometric and algebraic intuition needed to reason about high-dimensional spaces, linear transformations, and the fundamental structures underlying modern AI systems.
+
+\textbf{Key recommendations for continued learning:}
+\begin{enumerate}
+    \item Practice computational skills through problem-solving
+    \item Develop geometric intuition through visualization
+    \item Connect abstract concepts to ML/DL applications
+    \item Implement algorithms to solidify understanding
+    \item Study proofs to deepen theoretical knowledge
+\end{enumerate}
+
+The journey from scalars to vectors to general vector spaces reveals the beautiful unity of mathematical structures. These same principles that govern simple 2D and 3D spaces extend seamlessly to the million-dimensional parameter spaces of modern deep neural networks.
+
+\vfill
+\begin{center}
+\textit{``In mathematics, you don't understand things. You just get used to them."} \\
+— John von Neumann
+\end{center}
+
+\end{document}
